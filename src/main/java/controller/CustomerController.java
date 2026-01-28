@@ -15,7 +15,7 @@ public class CustomerController {
 
         this.view = view;
 
-        loadExistingCustomers(); // Cargar datos existentes al abrir
+        loadExistingCustomers();
 
         this.view.addSaveListener(e -> {
             saveCustomer();
@@ -42,7 +42,6 @@ public class CustomerController {
 
             Files.write(Paths.get(CUSTOMERS_FILE_PATH), (line + System.lineSeparator()).getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 
-            // Actualiza la tabla visualmente
             view.getTableModel().addRow(new Object[]{id, name, isPreferential ? "Sí" : "No"});
             view.clearFields();
 
@@ -56,33 +55,31 @@ public class CustomerController {
     }
 
     private void loadExistingCustomers() {
-        
+
         try {
             Path path = Paths.get(CUSTOMERS_FILE_PATH);
-            
-            // Si el archivo NO existe, salimos del método sin hacer nada
-            
+
             if (!Files.exists(path)) {
                 return;
             }
 
             List<String> lines = Files.readAllLines(path);
-            
+
             for (String line : lines) {
-                
+
                 String[] data = line.split(",");
-                
+
                 if (data.length == 3) {
-                    
+
                     String prefLabel = Boolean.parseBoolean(data[2]) ? "Sí" : "No";
                     view.getTableModel().addRow(new Object[]{data[0], data[1], prefLabel});
-                    
+
                 }
             }
         } catch (IOException e) {
-            
+
             System.err.println("Archivo de clientes no encontrado, se creará uno nuevo al guardar.");
-            
+
         }
     }
 }

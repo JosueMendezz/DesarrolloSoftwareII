@@ -1,11 +1,12 @@
 package model.entities;
 
 public class ParkingSpace {
+
     private int spaceNumber;
-    private String vehicleTypeSupported; 
+    private String vehicleTypeSupported;
     private boolean isPreferential;
     private boolean isOccupied;
-    private Vehicle currentVehicle; 
+    private Vehicle currentVehicle;
 
     public ParkingSpace(int spaceNumber, String vehicleTypeSupported, boolean isPreferential) {
         this.spaceNumber = spaceNumber;
@@ -13,7 +14,7 @@ public class ParkingSpace {
         this.isPreferential = isPreferential;
         this.isOccupied = false;
     }
-    
+
     public ParkingSpace() {
     }
 
@@ -61,5 +62,5 @@ public class ParkingSpace {
     public String toString() {
         return "ParkingSpace{" + "spaceNumber=" + spaceNumber + ", vehicleTypeSupported=" + vehicleTypeSupported + ", isPreferential=" + isPreferential + ", isOccupied=" + isOccupied + ", currentVehicle=" + currentVehicle + '}';
     }
-    
+
 }

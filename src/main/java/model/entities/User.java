@@ -1,9 +1,7 @@
-
 package model.entities;
 
-//clase abstracta, padre de los tipos de usuarios
 public abstract class User {
-    
+
     private String username;
     private String password;
 
@@ -30,7 +28,7 @@ public abstract class User {
     public void setPassword(String password) {
         this.password = password;
     }
-    
+
     public abstract String getRole();
-    
+
 }

@@ -1,8 +1,7 @@
-
 package model.entities;
 
 public class Clerk extends User {
-    
+
     public Clerk(String username, String password) {
         super(username, password);
     }
@@ -11,5 +10,5 @@ public class Clerk extends User {
     public String getRole() {
         return "OPERATOR";
     }
-    
+
 }

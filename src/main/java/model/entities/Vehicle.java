@@ -2,7 +2,6 @@ package model.entities;
 
 import java.time.LocalDateTime;
 
-// Clase abstracta para aplicar herencia y polimorfismo 
 public abstract class Vehicle {
 
     private String licensePlate;

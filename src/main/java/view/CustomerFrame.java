@@ -19,7 +19,6 @@ public class CustomerFrame extends JFrame {
         setSize(550, 450);
         setLayout(new BorderLayout(10, 10));
 
-        // Formulario (Arriba)
         JPanel panelForm = new JPanel(new GridLayout(4, 1, 5, 5));
         panelForm.setBorder(BorderFactory.createTitledBorder("Datos del Cliente"));
 
@@ -32,7 +31,6 @@ public class CustomerFrame extends JFrame {
 
         add(panelForm, BorderLayout.NORTH);
 
-        // Tabla (Centro)
         customerTableModel = new DefaultTableModel(new Object[]{"ID", "Nombre", "Preferencial"}, 0);
         customerTable = new JTable(customerTableModel);
         add(new JScrollPane(customerTable), BorderLayout.CENTER);
@@ -40,7 +38,6 @@ public class CustomerFrame extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    // Getters para el Controller
     public String getId() {
         return txtId.getText();
     }

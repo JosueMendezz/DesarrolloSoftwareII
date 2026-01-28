@@ -13,13 +13,10 @@ public class FileManager {
         List<User> users = new ArrayList<>();
         File file = new File(USER_FILE_PATH);
 
-        // Existe ?
         if (!file.exists()) {
             return users;
         }
 
-        //  Lectura del archivo
-        //Se usa try-with-resources para asegurar que los flujos se cierren siempre
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
@@ -30,7 +27,6 @@ public class FileManager {
                     String password = parts[1].trim();
                     String role = parts[2].trim().toUpperCase();
 
-                    //  Creación de objetos según el rol -CLERK y OPERATO-
                     if (role.equals("ADMIN")) {
                         users.add(new Admin(username, password));
                     } else if (role.equals("CLERK") || role.equals("OPERATOR")) {

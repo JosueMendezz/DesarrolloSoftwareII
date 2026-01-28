@@ -16,7 +16,6 @@ public class Dashboard extends JFrame {
     private JMenuItem customerManagementItem;
     private JMenuItem rateConfigurationItem;
 
-    //Recibimos el usuario logueado para personalizar la pantalla
     public Dashboard(User currentUser) {
 
         setTitle("J-Node System - Menú Principal");
@@ -25,16 +24,13 @@ public class Dashboard extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Bienvenida al sistema
         lblWelcome = new JLabel("Bienvenido: " + currentUser.getUsername() + " [" + currentUser.getRole() + "]");
         lblWelcome.setFont(new Font("Arial", Font.BOLD, 18));
         lblWelcome.setHorizontalAlignment(SwingConstants.CENTER);
         add(lblWelcome, BorderLayout.CENTER);
 
-        // Barra de menú 
         menuBar = new JMenuBar();
 
-        // MENÚ OPERATIVO 
         operationsMenu = new JMenu("Operaciones");
         vehicleEntryItem = new JMenuItem("Ingresar Vehículo");
         vehicleExitItem = new JMenuItem("Retirar Vehículo");
@@ -52,23 +48,17 @@ public class Dashboard extends JFrame {
         operationsMenu.add(customerManagementItem);
         menuBar.add(operationsMenu);
 
-        // MENÚ ADMINISTRADOR (Asi ocultamos o mostramos opciones dependiendo del tipo de usuario)
         if (currentUser.getRole().equalsIgnoreCase("ADMIN")) {
 
             menuAdmin = new JMenu("Administración");
             rateConfigurationItem = new JMenuItem("Configurar Tarifas");
-            //                                           //
-            // TODO opciones como admn. parqueos, etc... //
-            //                                           //
+
             menuAdmin.add(rateConfigurationItem);
             menuBar.add(menuAdmin);
 
-            // El color de fondo del admin sera azul para distinguir la interfaz de la del resto de usuarios
             lblWelcome.setForeground(Color.BLUE);
 
         }
-
-        // Agregamos la barra a la ventana
         setJMenuBar(menuBar);
 
         setVisible(true);

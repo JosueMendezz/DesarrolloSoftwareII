@@ -2,7 +2,7 @@ package model.entities;
 
 public class Tariff {
 
-    private String vehicleType; 
+    private String vehicleType;
     private double hourPrice;
     private double dayPrice;
     private double weekPrice;
@@ -63,6 +63,5 @@ public class Tariff {
     public String toString() {
         return "Tariff{" + "vehicleType=" + vehicleType + ", hourPrice=" + hourPrice + ", dayPrice=" + dayPrice + ", weekPrice=" + weekPrice + ", monthPrice=" + monthPrice + '}';
     }
-    
-   
+
 }

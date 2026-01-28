@@ -13,7 +13,7 @@ public class Motorcycle extends Vehicle {
 
     @Override
     public double calculateFee(long hours) {
-        double hourlyRate = 400.0; 
+        double hourlyRate = 400.0;
         return hours * hourlyRate;
     }
 }
