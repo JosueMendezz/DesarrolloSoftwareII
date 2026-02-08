@@ -1,3 +1,2 @@
-admin,1234,ADMIN
-cajero1,0000,CLERK
-jefe,9999,ADMIN
+admin,4321,ADMIN
+cajero1,1111,OPERATOR
