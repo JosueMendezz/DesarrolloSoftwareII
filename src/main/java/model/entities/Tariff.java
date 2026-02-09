@@ -1,5 +1,9 @@
 package model.entities;
 
+/**
+ * Entity representing the pricing structure for different vehicle types.
+ * Stores rates for various time intervals (hourly, daily, weekly, monthly).
+ */
 public class Tariff {
 
     private String vehicleType; 
@@ -8,15 +12,15 @@ public class Tariff {
     private double weekPrice;
     private double monthPrice;
 
+    public Tariff() {
+    }
+
     public Tariff(String vehicleType, double hourPrice, double dayPrice, double weekPrice, double monthPrice) {
         this.vehicleType = vehicleType;
         this.hourPrice = hourPrice;
         this.dayPrice = dayPrice;
         this.weekPrice = weekPrice;
         this.monthPrice = monthPrice;
-    }
-
-    public Tariff() {
     }
 
     public String getVehicleType() {
@@ -61,8 +65,10 @@ public class Tariff {
 
     @Override
     public String toString() {
-        return "Tariff{" + "vehicleType=" + vehicleType + ", hourPrice=" + hourPrice + ", dayPrice=" + dayPrice + ", weekPrice=" + weekPrice + ", monthPrice=" + monthPrice + '}';
+        return "Tariff [vehicleType=" + vehicleType + 
+               ", hour=" + hourPrice + 
+               ", day=" + dayPrice + 
+               ", week=" + weekPrice + 
+               ", month=" + monthPrice + "]";
     }
-    
-   
 }

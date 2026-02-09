@@ -2,7 +2,10 @@ package model.entities;
 
 import java.time.LocalDateTime;
 
-// Clase abstracta para aplicar herencia y polimorfismo 
+/**
+ * Abstract base class representing a generic Vehicle.
+ * Provides shared attributes and enforces fee calculation for subclasses.
+ */
 public abstract class Vehicle {
 
     private String licensePlate;
@@ -52,5 +55,10 @@ public abstract class Vehicle {
         this.entryTime = entryTime;
     }
 
+    /**
+     * Abstract method to be implemented by specific vehicle types.
+     * @param hours Total hours spent in the parking lot.
+     * @return The calculated fee based on the vehicle type's rate.
+     */
     public abstract double calculateFee(long hours);
 }

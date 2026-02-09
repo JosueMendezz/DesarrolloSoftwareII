@@ -1,20 +1,24 @@
 package model.entities;
 
+/**
+ * Entity representing a Customer in the system.
+ * Stores personal identification and accessibility requirements.
+ */
 public class Customer {
 
     private String id;
     private String name;
-    private boolean needsPreferentialSpace;
-
-    public Customer(String id, String name, boolean needsPreferentialSpace) {
-        this.id = id;
-        this.name = name;
-        this.needsPreferentialSpace = needsPreferentialSpace;
-    }
+    private boolean preferential;
 
     public Customer() {
     }
-    
+
+    public Customer(String id, String name, boolean preferential) {
+        this.id = id;
+        this.name = name;
+        this.preferential = preferential;
+    }
+
     public String getId() {
         return id;
     }
@@ -31,17 +35,16 @@ public class Customer {
         this.name = name;
     }
 
-    public boolean isNeedsPreferentialSpace() {
-        return needsPreferentialSpace;
+    public boolean isPreferential() {
+        return preferential;
     }
 
-    public void setNeedsPreferentialSpace(boolean needsPreferentialSpace) {
-        this.needsPreferentialSpace = needsPreferentialSpace;
+    public void setPreferential(boolean preferential) {
+        this.preferential = preferential;
     }
 
     @Override
     public String toString() {
-        return "Customer{" + "id=" + id + ", name=" + name + ", needsPreferentialSpace=" + needsPreferentialSpace + '}';
+        return "Customer [id=" + id + ", name=" + name + ", preferential=" + preferential + "]";
     }
-
 }

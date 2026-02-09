@@ -1,88 +1,78 @@
 package controller;
 
-import view.CustomerFrame;
+import model.data.FileManager;
 import java.io.IOException;
-import java.nio.file.*;
 import java.util.List;
-import javax.swing.JOptionPane;
 
 public class CustomerController {
 
-    private CustomerFrame view;
-    private final String CUSTOMERS_FILE_PATH = "customers.txt";
+    private final FileManager fileManager;
 
-    public CustomerController(CustomerFrame view) {
-
-        this.view = view;
-
-        loadExistingCustomers(); // Cargar datos existentes al abrir
-
-        this.view.addSaveListener(e -> {
-            saveCustomer();
-        });
+    public CustomerController(FileManager fileManager) {
+        this.fileManager = fileManager;
     }
 
-    private void saveCustomer() {
+   public void registerCustomer(String id, String name, boolean isPreferential) throws IOException {
+        validateCustomerData(id, name);
+        // Cargamos datos actuales para verificar duplicados
+        List<String[]> currentData = getAllCustomers();
+        checkDuplicateId(id, currentData);
 
-        String id = view.getId();
-        String name = view.getName();
-
-        boolean isPreferential = view.isPreferential();
-
-        if (id.isEmpty() || name.isEmpty()) {
-
-            JOptionPane.showMessageDialog(view, "Por favor complete todos los campos");
-
-            return;
-        }
-
-        String line = id + "," + name + "," + isPreferential;
-
-        try {
-
-            Files.write(Paths.get(CUSTOMERS_FILE_PATH), (line + System.lineSeparator()).getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-
-            // Actualiza la tabla visualmente
-            view.getTableModel().addRow(new Object[]{id, name, isPreferential ? "Sí" : "No"});
-            view.clearFields();
-
-            JOptionPane.showMessageDialog(view, "Cliente guardado exitosamente");
-
-        } catch (IOException ex) {
-
-            JOptionPane.showMessageDialog(view, "Error al acceder al archivo de clientes");
-
-        }
+        fileManager.saveCustomer(id, name, isPreferential);
     }
 
-    private void loadExistingCustomers() {
+    public void removeCustomer(int selectedRow, List<String[]> tableData) 
+            throws IOException, IllegalStateException {
         
-        try {
-            Path path = Paths.get(CUSTOMERS_FILE_PATH);
-            
-            // Si el archivo NO existe, salimos del método sin hacer nada
-            
-            if (!Files.exists(path)) {
-                return;
-            }
+        if (selectedRow < 0) {
+            throw new IllegalStateException("Debe seleccionar un cliente de la tabla.");
+        }
 
-            List<String> lines = Files.readAllLines(path);
-            
-            for (String line : lines) {
-                
-                String[] data = line.split(",");
-                
-                if (data.length == 3) {
-                    
-                    String prefLabel = Boolean.parseBoolean(data[2]) ? "Sí" : "No";
-                    view.getTableModel().addRow(new Object[]{data[0], data[1], prefLabel});
-                    
-                }
-            }
-        } catch (IOException e) {
-            
-            System.err.println("Archivo de clientes no encontrado, se creará uno nuevo al guardar.");
-            
+        tableData.remove(selectedRow);
+        syncFileData(tableData);
+    }
+
+    public void updateCustomer(int selectedRow, String newName, boolean isPreferential, List<String[]> tableData) 
+            throws IOException, IllegalStateException, IllegalArgumentException {
+        
+        if (selectedRow < 0) {
+            throw new IllegalStateException("Debe seleccionar un cliente.");
+        }
+
+        if (newName == null || newName.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del cliente no puede estar vacío.");
+        }
+
+        String[] customer = tableData.get(selectedRow);
+        customer[1] = newName.trim();
+        customer[2] = String.valueOf(isPreferential);
+        
+        syncFileData(tableData);
+    }
+
+    public List<String[]> getAllCustomers() throws IOException {
+        return fileManager.loadCustomersRaw();
+    }
+
+    private void validateCustomerData(String id, String name) throws IllegalArgumentException {
+        if (id == null || id.trim().isEmpty() || name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Por favor complete todos los campos");
         }
     }
+
+    private void checkDuplicateId(String id, List<String[]> currentData) throws IllegalArgumentException {
+        for (String[] row : currentData) {
+            if (row[0].equals(id)) {
+                throw new IllegalArgumentException("El ID ya se encuentra registrado.");
+            }
+        }
+    }
+
+    private void syncFileData(List<String[]> data) throws IOException {
+        fileManager.overwriteCustomers(data);
+    }
+    
+    public FileManager getFileManager() {
+    return this.fileManager;
+}
 }

@@ -1,4 +1,3 @@
 305710082,Josue Mendez S,false
 304890587,Brayan estrada M,true
-105920491,Lorena Serrano R,false
 54365421,Ericka Barrantes ,false

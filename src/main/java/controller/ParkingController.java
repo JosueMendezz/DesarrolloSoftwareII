@@ -1,127 +1,144 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controller;
 
 import model.entities.ParkingLot;
 import model.entities.ParkingSpace;
 import model.data.FileManager;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- *
- * @author Caleb Murillo
- */
 public class ParkingController {
 
-    private ParkingLot tempParking; // Objeto temporal mientras se configura
-    private int spacesConfigured = 0;
+    private ParkingLot tempParking;
+    private int spacesConfigured;
     private int prefSpacesAssigned = 0;
-    
-    public ParkingController() {
+    private final FileManager fileManager;
+
+    public ParkingController(FileManager fileManager) {
+        this.fileManager = fileManager;
     }
 
-    // RF-05: Crear la base del parqueo 
-    public void prepareParking(String name, int total, int pref) throws Exception {
-    if (name.trim().isEmpty()) throw new Exception("Error: El nombre no puede estar vacío."); // .trim() para evitar solo espacios
-    if (total <= 0) throw new Exception("Error: La cantidad de espacios debe ser mayor a 0.");
-    if (pref > total) throw new Exception("Error: La cuota de discapacidad no puede superar el total.");
+    // ESTE ES EL MÉTODO QUE LLAMA TU VISTA EN LA LÍNEA 88
+    // Lo unificamos para que coincida con el nombre que pusiste en el Frame
+    public void prepareTempParking(String name, int total, int pref) {
+        this.tempParking = new ParkingLot(0, name, total, pref);
+        // Inicializamos el arreglo de espacios para evitar NullPointerException
+        this.tempParking.setSpaces(new ParkingSpace[total]);
+        this.spacesConfigured = 0;
+        this.prefSpacesAssigned = 0;
+    }
 
-    tempParking = new ParkingLot();
-    tempParking.setName(name);
-    tempParking.setNumberOfSpaces(total);
-    tempParking.setPreferentialSpaces(pref);
-    tempParking.setSpaces(new ParkingSpace[total]);
-    this.spacesConfigured = 0;
-    this.prefSpacesAssigned = 0;
-}
+    // Validación de nombre duplicado corregida (usando el separador '|')
+    public void validateParkingName(String name) throws Exception {
+        List<String> existingLines = fileManager.readAllParkingLines(); 
+        for (String line : existingLines) {
+            if (line.trim().isEmpty()) continue;
+            // IMPORTANTE: Tu archivo usa | según el método formatParkingLine
+            String[] parts = line.split("\\|"); 
+            if (parts.length > 0 && parts[0].equalsIgnoreCase(name.trim())) {
+                throw new Exception("Error: El parqueo '" + name + "' ya existe. Usa otro nombre.");
+            }
+        }
+    }
 
-    // Configuración dinámica de bloques de espacios
     public void configureSpaceBlock(int qty, boolean isPref, String type) throws Exception {
-    int remaining = getRemainingSpaces(); // Usamos tus getters para consistencia
-    int prefRemaining = getPrefRemaining();
+        int totalRemaining = getRemainingSpaces();
+        int prefRemaining = getPrefRemaining();
 
-    // 1. REGLA FÍSICA: No puedes configurar lo que no existe
-    if (qty > remaining) {
-        throw new Exception("Error: No puedes configurar más espacios de los restantes (" + remaining + ").");
-    }
+        if (!isPref && (totalRemaining - qty) < prefRemaining) {
+            throw new Exception("Error: Debes reservar al menos " + prefRemaining + 
+                                " espacios para la cuota preferencial pendiente.");
+        }
 
-    // 2. REGLA DE PREFERENCIALES: No exceder la cuota definida al inicio
-    if (isPref && qty > prefRemaining) {
-        throw new Exception("Error: Solo quedan " + prefRemaining + " espacios de discapacidad por asignar.");
-    }
+        if (isPref && qty > prefRemaining) {
+            throw new Exception("La cantidad excede la cuota preferencial restante.");
+        }
 
-    // 3. REGLA DE RESERVA (LA MÁS IMPORTANTE):
-    // Si NO es preferencial, no puedes usar tantos espacios que dejes al sistema
-    // sin capacidad física para cumplir con los preferenciales que faltan.
-    if (!isPref && (remaining - qty) < prefRemaining) {
-        throw new Exception("Error: Debes reservar " + prefRemaining + 
-                           " espacios para discapacidad. Reduce la cantidad de espacios normales.");
-    }
-
-    // 4. LÓGICA DE LLENADO (ATÓMICA)
-    for (int i = 0; i < qty; i++) {
-        ParkingSpace newSpace = new ParkingSpace();
-        newSpace.setSpaceNumber(spacesConfigured + 1);
-        newSpace.setVehicleTypeSupported(type);
-        newSpace.setIsPreferential(isPref);
-        newSpace.setIsOccupied(false);
-
-        tempParking.getSpaces()[spacesConfigured] = newSpace;
+        for (int i = 0; i < qty; i++) {
+            createSingleSpace(isPref, type);
+        }
         
-        // El contador de espacios totales configurados sube uno a uno para el índice
+        if (isPref) prefSpacesAssigned += qty;
+    }
+
+    private void createSingleSpace(boolean isPref, String type) {
+        ParkingSpace space = new ParkingSpace();
+        space.setSpaceNumber(spacesConfigured + 1);
+        space.setVehicleTypesSupported(type);
+        space.setIsPreferential(isPref);
+        space.setIsOccupied(false);
+
+        tempParking.getSpaces()[spacesConfigured] = space;
         spacesConfigured++;
     }
 
-    // 5. ACTUALIZACIÓN DE CONTADOR PREFERENCIAL
-    if (isPref) {
-        prefSpacesAssigned += qty;
-    }  
-}
-    
-    public void validateAndSave() throws Exception {
-    // 1. Validación de espacios totales (la que ya tienes)
-    if (spacesConfigured < tempParking.getNumberOfSpaces()) {
-        throw new Exception("Aún quedan espacios por configurar.");
+    public void saveParkingConfiguration(String oldName) throws IOException {
+        updateParkingInList(oldName);
+        spacesConfigured = 0;
+        prefSpacesAssigned = 0;
     }
 
-    // 2. NUEVA VALIDACIÓN: Cuota de discapacidad
-    int totalPrefRequired = tempParking.getPreferentialSpaces();
-    if (prefSpacesAssigned < totalPrefRequired) {
-        int missing = totalPrefRequired - prefSpacesAssigned;
-        throw new Exception("Error: Debes asignar los " + missing + 
-                           " espacios para discapacidad restantes antes de finalizar.");
+    private void updateParkingInList(String oldName) throws IOException {
+        List<String> lines = fileManager.readAllParkingLines();
+        List<String> updatedLines = new ArrayList<>();
+        boolean exists = false;
+
+        for (String line : lines) {
+            if (line.trim().isEmpty()) continue;
+            String[] data = line.split("\\|");
+            if (data[0].equalsIgnoreCase(oldName)) {
+                updatedLines.add(formatParkingLine());
+                exists = true;
+            } else {
+                updatedLines.add(line);
+            }
+        }
+        if (!exists) {
+            updatedLines.add(formatParkingLine());
+        }
+        fileManager.saveParkingData(updatedLines);
     }
-}
+
+    private String formatParkingLine() {
+        return String.format("%s|%d|%d", tempParking.getName(),
+                tempParking.getNumberOfSpaces(), tempParking.getPreferentialSpaces());
+    }
 
     public int getRemainingSpaces() {
         return tempParking.getNumberOfSpaces() - spacesConfigured;
     }
 
+    public int getPrefRemaining() {
+        return tempParking.getPreferentialSpaces() - prefSpacesAssigned;
+    }
+
     public boolean isConfigFinished() {
-        return spacesConfigured == tempParking.getNumberOfSpaces();
+        return tempParking != null && getRemainingSpaces() == 0 && getPrefRemaining() <= 0;
     }
 
-    public ParkingLot getTempParking() {
-        return this.tempParking;
+    public List<String[]> loadAllParkings() throws IOException {
+        List<String> lines = fileManager.readAllParkingLines();
+        List<String[]> data = new ArrayList<>();
+        for (String line : lines) {
+            if (!line.trim().isEmpty()) {
+                data.add(line.split("\\|"));
+            }
+        }
+        return data;
     }
-
-   public int getPrefRemaining() {
-    // 1. Cuota inicial definida por el Admin
-    int cuotaTotalPref = tempParking.getPreferentialSpaces();
     
-    // 2. REGLA DE ORO: Restar la variable que REALMENTE incrementamos
-    // Cambiamos 'prefSpacesConfigured' por 'prefSpacesAssigned'
-    return cuotaTotalPref - this.prefSpacesAssigned; 
+    public void deleteParkingBranch(String name) throws IOException {
+    List<String> lines = fileManager.readAllParkingLines();
+    List<String> remaining = new ArrayList<>();
+    for (String line : lines) {
+        if (line.trim().isEmpty()) continue; // Seguridad para líneas vacías
+        // Usamos el separador | que definimos antes
+        if (!line.split("\\|")[0].equalsIgnoreCase(name)) {
+            remaining.add(line);
+        }
+    }
+    fileManager.saveParkingData(remaining);
 }
-   
-   public void prepareForEditing(ParkingLot parking) {
-    this.tempParking = parking;
-    // Reseteamos contadores para la nueva configuración de bloques
-    this.spacesConfigured = 0;
-    this.prefSpacesAssigned = 0;
-    // Limpiamos el arreglo de espacios para sobreescribirlo
-    this.tempParking.setSpaces(new ParkingSpace[parking.getNumberOfSpaces()]);
-}
-
+    public ParkingLot getTempParking() { return this.tempParking; }
+    public FileManager getFileManager() { return this.fileManager; }
 }

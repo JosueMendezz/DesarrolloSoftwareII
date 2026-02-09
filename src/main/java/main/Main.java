@@ -1,20 +1,26 @@
 package main;
 
+import model.data.FileManager;
 import view.LoginFrame;
 import controller.LoginController;
+import javax.swing.UIManager;
 
 public class Main {
 
     public static void main(String[] args) {
+    // ... (Look and Feel igual)
 
-        // Creamos el objeto de la ventana
-        LoginFrame vista = new LoginFrame();
+    // 1. Inicializamos la persistencia
+    FileManager fileManager = new FileManager();
 
-        // Creamos el objeto del controlador y le pasamos la ventana
-        // Esto conecta los botones con la lógica
-        new LoginController(vista);
+    // 2. La Vista NO recibe el fileManager (Mantenemos SRP)
+    LoginFrame loginView = new LoginFrame(); // Volvemos al constructor vacío
 
-        // Aseguramos que se vea 
-        vista.setVisible(true);
-    }
+    // 3. El CONTROLADOR es el que une a ambos
+    // Él recibe la vista para escuchar los botones y el manager para validar datos
+    new LoginController(loginView, fileManager);    
+
+    // 4. Lanzar
+    loginView.setVisible(true);
+}
 }

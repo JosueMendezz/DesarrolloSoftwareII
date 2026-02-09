@@ -1,147 +1,135 @@
 package model.data;
 
 import java.io.*;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import model.entities.*;
 
+/**
+ * Persistence Layer Manager.
+ * Responsibilities: Low-level File I/O operations and data parsing.
+ * SRP: This class only handles how data is written to and read from physical storage.
+ */
 public class FileManager {
 
-    private static final String USER_FILE_PATH = "users.txt";
+    private static final String USER_FILE = "users.txt";
+    private static final String PARKING_FILE = "parkings.txt";
+    private static final String CUSTOMER_FILE = "customers.txt";
+
+    public FileManager() {
+        ensureFilesExist();
+    }
+
+    private void ensureFilesExist() {
+        try {
+            if (!Files.exists(Paths.get(USER_FILE))) Files.createFile(Paths.get(USER_FILE));
+            if (!Files.exists(Paths.get(PARKING_FILE))) Files.createFile(Paths.get(PARKING_FILE));
+            if (!Files.exists(Paths.get(CUSTOMER_FILE))) Files.createFile(Paths.get(CUSTOMER_FILE));
+        } catch (IOException e) {
+            System.err.println("Critical Error: Could not initialize data files: " + e.getMessage());
+        }
+    }
+
+    // --- USER REPOSITORY ---
 
     public List<User> loadUsers() throws IOException {
-        List<User> users = new ArrayList<>();
-        File file = new File(USER_FILE_PATH);
-
-        // Existe ?
-        if (!file.exists()) {
-            return users;
-        }
-
-        //  Lectura del archivo
-        //Se usa try-with-resources para asegurar que los flujos se cierren siempre
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                String[] parts = line.split(",");
-
-                if (parts.length == 3) {
-                    String username = parts[0].trim();
-                    String password = parts[1].trim();
-                    String role = parts[2].trim().toUpperCase();
-
-                    //  Creación de objetos según el rol -CLERK y OPERATO-
-                    if (role.equals("ADMIN")) {
-                        users.add(new Admin(username, password));
-                    } else if (role.equals("CLERK") || role.equals("OPERATOR")) {
-                        users.add(new Clerk(username, password));
-                    }
-                }
-            }
-        }
-
-        return users;
+        return Files.readAllLines(Paths.get(USER_FILE)).stream()
+                .map(this::parseUserLine)
+                .filter(user -> user != null)
+                .collect(Collectors.toList());
     }
 
-   public static void updateParkingInFile(ParkingLot updatedParking, String oldName) throws IOException {
-    List<String> lines = readAllLines("parkings.txt");
-    List<String> updatedLines = new java.util.ArrayList<>();
-    boolean found = false;
-
-    for (String line : lines) {
-        String[] data = line.split("\\|");
-        // Comparamos contra el nombre ORIGINAL (oldName)
-        if (data[0].equalsIgnoreCase(oldName)) {
-            updatedLines.add(updatedParking.getName() + "|" + 
-                             updatedParking.getNumberOfSpaces() + "|" + 
-                             updatedParking.getPreferentialSpaces());
-            found = true;
-        } else {
-            updatedLines.add(line);
-        }
+    public void saveUsers(List<User> users) throws IOException {
+        List<String> lines = users.stream()
+                .map(u -> u.getUsername() + "," + u.getPassword() + "," + u.getRole())
+                .collect(Collectors.toList());
+        Files.write(Paths.get(USER_FILE), lines, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-    // Si no existía (era un parqueo totalmente nuevo), se añade
-    if (!found) {
-        updatedLines.add(updatedParking.getName() + "|" + 
-                         updatedParking.getNumberOfSpaces() + "|" + 
-                         updatedParking.getPreferentialSpaces());
+    private User parseUserLine(String line) {
+        String[] parts = line.split(",");
+        if (parts.length < 3) return null;
+
+        String username = parts[0].trim();
+        String password = parts[1].trim();
+        String role = parts[2].trim().toUpperCase();
+
+        return role.equals("ADMIN") ? new Admin(username, password) : new Clerk(username, password);
     }
 
-    java.nio.file.Files.write(java.nio.file.Paths.get("parkings.txt"), updatedLines);
-}
+    // --- PARKING REPOSITORY ---
 
-    public static void overwriteParking(ParkingLot parking) throws IOException {
-    // Este método debería llamar internamente a updateParkingFull 
-    // usando los datos del objeto ParkingLot.
-    updateParkingFull(parking.getName(), parking.getName(), 
-                      parking.getNumberOfSpaces(), parking.getPreferentialSpaces());
-}
-    
-    public static List<String> readAllLines(String path) throws IOException {
-        List<String> lines = new ArrayList<>();
-        // El try-with-resources asegura que el archivo se cierre aunque haya error
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                lines.add(line);
-            }
-        }
-        return lines; // Lanza la IOException si el archivo no existe o está bloqueado
+    public List<String> readAllParkingLines() throws IOException {
+        return Files.readAllLines(Paths.get(PARKING_FILE));
+    }
+
+    public void saveParkingData(List<String> lines) throws IOException {
+        Files.write(Paths.get(PARKING_FILE), lines, 
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    // --- CUSTOMER REPOSITORY ---
+
+    public List<String> readAllCustomerLines() throws IOException {
+        return Files.readAllLines(Paths.get(CUSTOMER_FILE));
+    }
+
+    public void appendCustomer(String data) throws IOException {
+        Files.write(Paths.get(CUSTOMER_FILE), (data + System.lineSeparator()).getBytes(),
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
     
-    // En FileManager.java
-public static void deleteParking(String name) throws IOException {
-    List<String> lines = readAllLines("parkings.txt");
-    // Filtramos: dejamos todas las líneas EXCEPTO la que coincide con el nombre
-    List<String> updatedLines = lines.stream()
-            .filter(line -> !line.split("\\|")[0].equals(name))
-            .toList();
-            
-    java.nio.file.Files.write(java.nio.file.Paths.get("parkings.txt"), updatedLines);
-}
-
-public static void updateParkingFull(String oldName, String newName, int newTotal, int newPref) throws IOException {
-    List<String> lines = readAllLines("parkings.txt");
-    List<String> updatedLines = new java.util.ArrayList<>();
-    
-    for (String line : lines) {
-        String[] data = line.split("\\|");
-        // Si el nombre coincide, armamos la nueva línea con el orden: Nombre|Total|Pref
-        if (data[0].equals(oldName)) {
-            updatedLines.add(newName + "|" + newTotal + "|" + newPref);
-        } else {
-            updatedLines.add(line);
-        }
+    /**
+     * Helper to read raw lines from any file within the model.data context.
+     */
+    public List<String> readRawLines(String fileName) throws IOException {
+        Path path = Paths.get(fileName);
+        return Files.exists(path) ? Files.readAllLines(path) : new ArrayList<>();
     }
-    // Sobrescribimos el archivo con la lista actualizada
-    java.nio.file.Files.write(java.nio.file.Paths.get("parkings.txt"), updatedLines);
-}
-
-public static model.entities.ParkingLot getParkingByName(String name) throws IOException {
-    List<String> lines = readAllLines("parkings.txt");
-    for (String line : lines) {
-        String[] data = line.split("\\|");
-        // Si el nombre (data[0]) coincide, creamos el objeto
-        if (data[0].equalsIgnoreCase(name)) {
-            model.entities.ParkingLot p = new model.entities.ParkingLot();
-            p.setName(data[0]);
-            p.setNumberOfSpaces(Integer.parseInt(data[1]));
-            p.setPreferentialSpaces(Integer.parseInt(data[2]));
-            
-            // Inicializamos el arreglo de espacios vacío para la nueva configuración
-            p.setSpaces(new model.entities.ParkingSpace[p.getNumberOfSpaces()]);
-            return p;
-        }
-    }
-    throw new IOException("No se encontró el parqueo con el nombre: " + name);
-}
-
-public static boolean exists(String name) throws IOException {
-    List<String> lines = readAllLines("parkings.txt");
-    return lines.stream()
-                .map(line -> line.split("\\|")[0].trim())
-                .anyMatch(n -> n.equalsIgnoreCase(name.trim()));
-}
-}
     
+    public void saveCustomer(String id, String name, boolean isPreferential) throws IOException {
+    String data = id + "," + name + "," + isPreferential;
+    appendCustomer(data);
+}
+
+/**
+ * Loads all customers as a list of String arrays for table compatibility.
+ */
+public List<String[]> loadCustomersRaw() throws IOException {
+    return readAllCustomerLines().stream()
+            .map(line -> line.split(","))
+            .collect(java.util.stream.Collectors.toList());
+}
+
+/**
+ * Overwrites the customer file with updated data (used for delete/update).
+ */
+public void overwriteCustomers(List<String[]> data) throws IOException {
+    List<String> lines = data.stream()
+            .map(row -> String.join(",", row))
+            .collect(java.util.stream.Collectors.toList());
+    Files.write(Paths.get("customers.txt"), lines, 
+                java.nio.file.StandardOpenOption.CREATE, 
+                java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
+}
+
+public List<String> readAllUserLines() {
+    List<String> lines = new ArrayList<>();
+    // Ajusta la ruta si tu archivo tiene otro nombre
+    File file = new File("users.txt"); 
+    
+    if (!file.exists()) return lines;
+
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        String line;
+        while ((line = br.readLine()) != null) {
+            lines.add(line);
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading users file: " + e.getMessage());
+    }
+    return lines;
+}
+}

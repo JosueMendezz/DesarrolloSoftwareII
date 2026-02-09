@@ -1,56 +1,67 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package view;
 
 import controller.ParkingController;
+import model.entities.User;
 import javax.swing.*;
 import java.awt.*;
-import model.data.FileManager;
-import model.entities.User;
 
 /**
- *
- * @author Caleb Murillo
+ * View for configuring individual space attributes (type and preferential status).
+ * Operates on a block-allocation logic until the total capacity is met.
  */
 public class SpaceConfigFrame extends JFrame {
 
-    private JLabel lblRemaining = new JLabel("Espacios restantes: 0");
-    private JComboBox<Integer> comboQtyToConfig = new JComboBox<>();
-    private JCheckBox chkIsPreferential = new JCheckBox("¿Espacio(s) Preferencial(es)?");
-    private JComboBox<String> comboVehicleType = new JComboBox<>(new String[]{"Car", "Motorcycle", "Bicycle", "HeavyVehicle"});
+    private final JLabel lblRemaining = new JLabel("Espacios Restantes: 0");
+    private final JComboBox<Integer> comboQtyToConfig = new JComboBox<>();
+    private final JCheckBox chkIsPreferential = new JCheckBox("Espacio(s) Preferencial(s)");
+    private final JComboBox<String> comboVehicleType = new JComboBox<>(
+            new String[]{"Automóvil", "Motocicleta", "Bicicleta", "Vehículo Pesado"}
+    );
 
-    private JButton btnExit = new JButton("Salir");
-    private JButton btnBack = new JButton("Atrás");
-    private JButton btnFinish = new JButton("Finalizar");
+    private final JButton btnExit = new JButton("Salir");
+    private final JButton btnBack = new JButton("Atrás");
+    private final JButton btnFinish = new JButton("Crear Parqueo");
 
-    private ParkingController controller;
-    private User currentUser;
-    private String oldName;
+    private final ParkingController controller;
+    private final User currentUser;
+    private final String oldName;
 
     public SpaceConfigFrame(ParkingController controller, User user, String originalName) {
         this.controller = controller;
         this.currentUser = user;
         this.oldName = originalName;
 
-        setTitle("J-Node - Configuración de Espacios");
-        setSize(450, 350);
+        setupConfiguration();
+        setupComponents();
+        setupListeners();
+        updateUI();
+    }
+
+    private void setupConfiguration() {
+        setTitle("J-Node - Space Allocation Config");
+        setSize(500, 400);
         setLayout(new BorderLayout(15, 15));
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+    }
 
+    private void setupComponents() {
         JPanel panelMain = new JPanel(new GridLayout(5, 1, 10, 10));
         panelMain.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
+        // Status Label
+        lblRemaining.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         panelMain.add(lblRemaining);
 
+        // Quantity Row
         JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row1.add(new JLabel("Cantidad a configurar:"));
+        row1.add(new JLabel("Espacios a Asignar:"));
         row1.add(comboQtyToConfig);
         panelMain.add(row1);
 
         panelMain.add(chkIsPreferential);
 
+        // Vehicle Type Row
         JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         row2.add(new JLabel("Tipo de Vehículo:"));
         row2.add(comboVehicleType);
@@ -58,109 +69,97 @@ public class SpaceConfigFrame extends JFrame {
 
         add(panelMain, BorderLayout.CENTER);
 
-        // Panel de Navegación
+        // Navigation Panel
         JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         panelButtons.add(btnExit);
         panelButtons.add(btnBack);
         panelButtons.add(btnFinish);
         add(panelButtons, BorderLayout.SOUTH);
+    }
 
-        btnFinish.addActionListener(e -> {
-            try {
-                int qty = getSelectedQty();
-                String type = getVehicleType();
-                boolean isPref = isPreferential();
+    private void setupListeners() {
+        btnFinish.addActionListener(e -> handleFinishBlock());
 
-                controller.configureSpaceBlock(qty, isPref, type);
-
-                if (controller.isConfigFinished()) {
-                    int prefMissing = controller.getPrefRemaining();
-
-                    if (prefMissing > 0) {
-                        JOptionPane.showMessageDialog(this,
-                                "¡Cuota Incompleta! Faltan " + prefMissing + " espacios de discapacidad.",
-                                "Error", JOptionPane.ERROR_MESSAGE);
-                    } else {
-                        
-                        FileManager.updateParkingInFile(controller.getTempParking(), oldName);
-
-                        JOptionPane.showMessageDialog(this, "¡Sede actualizada correctamente!");
-                        new ParkingManagementFrame(currentUser).setVisible(true);
-                        this.dispose();
-                        return;
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(this, "Bloque configurado. Restan " + controller.getRemainingSpaces());
-                }
-                updateUI();
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                updateUI();
-            }
-        });
-        int iniciales = controller.getRemainingSpaces(); // El total que definimos antes
-        setRemainingText(iniciales);
-        updateQtyCombo(iniciales);
-        chkIsPreferential.addActionListener(e -> updateUI());
-        updateUI();
-        
-        // Botón Atrás: Regresa a la pantalla de datos básicos (Nombre/Capacidad)
         btnBack.addActionListener(e -> {
-            // Reabrimos la ventana de creación/edición pasando el controlador actual
-            // para que no se pierda el progreso de lo que ya se escribió.
-            new ParkingCreateFrame(currentUser, controller.getTempParking()).setVisible(true);
+            new ParkingCreateFrame(currentUser, controller, controller.getTempParking()).setVisible(true);
             this.dispose();
         });
 
-        // Botón Salir: Cancela todo y vuelve a la gestión de sedes
-        btnExit.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(this, 
-                "¿Estás seguro de salir? Se perderán los cambios no finalizados.", 
-                "Confirmar Salida", JOptionPane.YES_NO_OPTION);
-            
-            if (confirm == JOptionPane.YES_OPTION) {
-                new ParkingManagementFrame(currentUser).setVisible(true);
-                this.dispose();
-            }
-        });
-    }// fin del constructor
+        btnExit.addActionListener(e -> handleExit());
 
-    // Métodos para actualizar la UI dinámicamente
-    public void setRemainingText(int count) {
-        lblRemaining.setText("Espacios restantes: " + count);
+        chkIsPreferential.addActionListener(e -> updateUI());
     }
 
-    public void updateQtyCombo(int max) {
+    private void handleFinishBlock() {
+        try {
+            int qty = (int) comboQtyToConfig.getSelectedItem();
+            String type = (String) comboVehicleType.getSelectedItem();
+            boolean isPref = chkIsPreferential.isSelected();
+
+            controller.configureSpaceBlock(qty, isPref, type);
+
+            if (controller.isConfigFinished()) {
+                finalizeParkingSetup();
+            } else {
+                JOptionPane.showMessageDialog(this, "Espacio(s) configurado(s). " + controller.getRemainingSpaces() + " Espacios Restantes.");
+                updateUI();
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Configuration Error", JOptionPane.ERROR_MESSAGE);
+            updateUI();
+        }
+    }
+
+    private void finalizeParkingSetup() {
+        try {
+            // We delegate the saving process to the controller
+            controller.saveParkingConfiguration(oldName);
+            
+            JOptionPane.showMessageDialog(this, "Parqueo Creado Exitosamente");
+            // Return to management with an injected controller (Standard practice)
+            new ParkingManagementFrame(currentUser, controller).setVisible(true);
+            this.dispose();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Critical Save Error: " + ex.getMessage());
+        }
+    }
+
+    private void handleExit() {
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Desea salir de la ventana actual? Los cambios no se guardarán.",
+                "Confirm Exit", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            new ParkingManagementFrame(currentUser, controller).setVisible(true);
+            this.dispose();
+        }
+    }
+
+    private void updateUI() {
+    int totalRemaining = controller.getRemainingSpaces();
+    int prefMissing = controller.getPrefRemaining();
+
+    lblRemaining.setText("<html>Physical spaces left: <b>" + totalRemaining + "</b><br>"
+            + "Pending preferential quota: <b>" + prefMissing + "</b></html>");
+
+    updateQtyCombo(totalRemaining);
+    
+    // LÓGICA DE APOYO: Si los espacios que quedan son iguales a la cuota pendiente,
+    // obligamos a que el checkbox esté marcado y lo deshabilitamos.
+    if (totalRemaining > 0 && totalRemaining == prefMissing) {
+        chkIsPreferential.setSelected(true);
+        chkIsPreferential.setEnabled(false); 
+    } else {
+        chkIsPreferential.setEnabled(totalRemaining > 0);
+    }
+
+    btnFinish.setEnabled(totalRemaining > 0 || controller.isConfigFinished());
+}
+
+    private void updateQtyCombo(int max) {
         comboQtyToConfig.removeAllItems();
         for (int i = 1; i <= max; i++) {
             comboQtyToConfig.addItem(i);
         }
     }
-
-    // Getters
-    public int getSelectedQty() {
-        return (int) comboQtyToConfig.getSelectedItem();
-    }
-
-    public boolean isPreferential() {
-        return chkIsPreferential.isSelected();
-    }
-
-    public String getVehicleType() {
-        return (String) comboVehicleType.getSelectedItem();
-    }
-
-    private void updateUI() {
-        int totalRemaining = controller.getRemainingSpaces();
-        int prefMissing = controller.getPrefRemaining();
-
-        // Mostramos la realidad sin adornos
-        lblRemaining.setText("<html>Espacios físicos restantes: <b>" + totalRemaining + "</b><br>"
-                + "Cuota de discapacidad pendiente: <b>" + prefMissing + "</b></html>");
-
-        // EL CAMBIO CLAVE: Siempre mostramos el máximo de espacios físicos disponibles.
-        // No bloqueamos el combo aquí, lo validamos al darle "Finalizar".
-        updateQtyCombo(totalRemaining);
-    }
 }
-    

@@ -1,9 +1,11 @@
-
 package model.entities;
 
-//clase abstracta, padre de los tipos de usuarios
+/**
+ * Abstract base class for all system users.
+ * Provides core credentials and enforces role identification.
+ */
 public abstract class User {
-    
+
     private String username;
     private String password;
 
@@ -30,7 +32,10 @@ public abstract class User {
     public void setPassword(String password) {
         this.password = password;
     }
-    
+
+    /**
+     * @return String representation of the user's specific role.
+     */
     public abstract String getRole();
-    
+
 }
