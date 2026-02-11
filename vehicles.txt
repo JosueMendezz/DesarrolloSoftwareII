@@ -1,0 +1,2 @@
+78|Automóvil|o|d|d|N/A|true|None|1|Paraíso|6|2026-02-11 01:57
+h|Motocicleta|h|h|h|N/A|false|None|2|Paraíso|2|2026-02-11 01:58

@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * Controller for User Management.
- * Bridge between UserManagementFrame and FileManager.
+ * Controller for User Management. Bridge between UserManagementFrame and
+ * FileManager.
  */
 public class UserController {
 
@@ -34,13 +34,13 @@ public class UserController {
      */
     public void processUserRegistration(String username, String password, String role) throws Exception {
         validateInput(username, password);
-        
+
         if (isUsernameDuplicate(username)) {
-            throw new Exception("Username already exists.");
+            throw new Exception("El nombre de Usuario ya existe.");
         }
 
-        User newUser = role.equalsIgnoreCase("ADMIN") 
-                ? new Admin(username, password) 
+        User newUser = role.equalsIgnoreCase("ADMIN")
+                ? new Admin(username, password)
                 : new Clerk(username, password);
 
         cachedUsers.add(newUser);
@@ -54,7 +54,9 @@ public class UserController {
         validateInput(username, password);
 
         int index = findUserIndex(username);
-        if (index == -1) throw new Exception("User not found for update.");
+        if (index == -1) {
+            throw new Exception("Usuario no encontrado, seleccione un Usuario existente para modificar");
+        }
 
         User updatedUser = role.equalsIgnoreCase("ADMIN")
                 ? new Admin(username, password)
@@ -69,14 +71,15 @@ public class UserController {
      */
     public void processUserDeletion(String username) throws Exception {
         int index = findUserIndex(username);
-        if (index == -1) throw new Exception("El usuario no se ha encontrado en la base de datos");
+        if (index == -1) {
+            throw new Exception("El usuario no se ha encontrado en la base de datos");
+        }
 
         cachedUsers.remove(index);
         fileManager.saveUsers(cachedUsers);
     }
 
     // --- Internal Helpers ---
-
     private void validateInput(String user, String pass) throws Exception {
         if (user.isEmpty() || pass.isEmpty()) {
             throw new Exception("Los campos no pueden quedar vacíos.");
@@ -100,22 +103,21 @@ public class UserController {
     public List<User> getCachedUsers() {
         return cachedUsers;
     }
-    
-    // Dentro de UserController.java
-public FileManager getFileManager() {
-    return this.fileManager;
-}
 
-public List<String[]> getAllUsers() {
-    List<String> lines = fileManager.readAllUserLines(); // Lee el archivo de usuarios
-    List<String[]> userList = new ArrayList<>();
-    
-    for (String line : lines) {
-        if (!line.trim().isEmpty()) {
-            // Corta la línea por la coma: admin,1234,ADMIN
-            userList.add(line.split(",")); 
-        }
+    public FileManager getFileManager() {
+        return this.fileManager;
     }
-    return userList;
-}
+
+    public List<String[]> getAllUsers() {
+        List<String> lines = fileManager.readAllUserLines();
+        List<String[]> userList = new ArrayList<>();
+
+        for (String line : lines) {
+            if (!line.trim().isEmpty()) {
+                // Corta la línea por la coma: admin,1234,ADMIN
+                userList.add(line.split(","));
+            }
+        }
+        return userList;
+    }
 }

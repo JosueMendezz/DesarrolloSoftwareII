@@ -2,6 +2,7 @@ package view;
 
 import controller.CustomerController;
 import controller.ParkingController;
+import controller.VehicleController; // Asegúrate de importar esto
 import model.data.FileManager;
 import model.entities.User;
 import javax.swing.*;
@@ -11,7 +12,7 @@ public class Dashboard extends JFrame {
 
     private final User currentUser;
     private final FileManager fileManager;
-    private JLabel lblWelcome;
+    private JTabbedPane tabbedPane;
 
     public Dashboard(User currentUser, FileManager fileManager) {
         this.currentUser = currentUser;
@@ -19,7 +20,7 @@ public class Dashboard extends JFrame {
 
         setupConfiguration();
         setupBackground();
-        setupWelcomeMessage();
+        setupTabs();
         setupMenuBar();
 
         setVisible(true);
@@ -27,33 +28,64 @@ public class Dashboard extends JFrame {
 
     private void setupConfiguration() {
         setTitle("J-Node Parking System - Main Menu");
-        setSize(1024, 600);
-        // Cambiamos a EXIT_ON_CLOSE para que al cerrar el menú principal se detenga todo el programa
+        setSize(1100, 700); // Un poco más grande para la tabla
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
     }
 
     private void setupBackground() {
         BackgroundPanel background = new BackgroundPanel("background.jpg");
-        background.setLayout(new GridBagLayout());
+        background.setLayout(new BorderLayout());
         setContentPane(background);
     }
 
-    private void setupWelcomeMessage() {
+    private void setupTabs() {
+        tabbedPane = new JTabbedPane();
+
+        // 1. Transparencia total del contenedor de pestañas
+        tabbedPane.setBackground(new Color(45, 45, 45, 200));
+        tabbedPane.setOpaque(false);
+
+        // --- PESTAÑA 1: BIENVENIDA ---
+        JPanel welcomePanel = new JPanel(new GridBagLayout());
+        welcomePanel.setOpaque(false); // <--- Clave para ver el BackgroundPanel
+
+        // Contenedor del mensaje (el recuadro "ahumado")
+        JPanel textContainer = new JPanel();
+        textContainer.setBackground(new Color(0, 0, 0, 180)); // Negro semi-transparente
+        textContainer.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
+        // IMPORTANTE: Para que el color con transparencia funcione, setOpaque debe ser true
+        textContainer.setOpaque(true);
+
         String role = currentUser.getRole().toLowerCase();
-        lblWelcome = new JLabel("Bienvenido " + role + ": " + currentUser.getUsername());
-        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        JLabel lblWelcome = new JLabel("Bienvenido " + role + ": " + currentUser.getUsername());
+        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 36));
         lblWelcome.setForeground(Color.WHITE);
 
-        JPanel textContainer = new JPanel();
-        textContainer.setBackground(new Color(0, 0, 0, 120));
         textContainer.add(lblWelcome);
+        welcomePanel.add(textContainer);
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridy = 0;
-        gbc.weighty = 1.0;
-        gbc.insets = new Insets(45, 0, 0, 0);
-        getContentPane().add(textContainer, gbc);
+        // --- PESTAÑA 2: MONITOR DE ESTADO ---
+        VehicleController vehicleController = new VehicleController(fileManager);
+        ParkingMonitorView monitorTab = new ParkingMonitorView(vehicleController);
+        monitorTab.setOpaque(true); // Se mantiene opaco para legibilidad de la tabla
+
+        // Añadimos las pestañas
+        tabbedPane.addTab("Inicio", welcomePanel);
+        tabbedPane.addTab("Parqueos", monitorTab);
+        customizeTabTitles();
+        getContentPane().add(tabbedPane, BorderLayout.CENTER);
+
+        // 2. AJUSTE DE UI: Algunos "Look and Feel" pintan un panel opaco debajo de las pestañas
+        // Recorremos los componentes internos del tabbedPane para asegurar transparencia en la pestaña 0
+        tabbedPane.setUI(new javax.swing.plaf.basic.BasicTabbedPaneUI() {
+            @Override
+            protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
+            }
+        });
+
+        // Añadimos el tabbedPane al Dashboard
+        getContentPane().add(tabbedPane, BorderLayout.CENTER);
     }
 
     private void setupMenuBar() {
@@ -69,12 +101,14 @@ public class Dashboard extends JFrame {
         // --- Operations Menu ---
         JMenu operationsMenu = createMenu("Operaciones");
 
-        // El Customer Management sigue siendo para todos
         JMenuItem customerItem = new JMenuItem("Gestión de Clientes");
         customerItem.addActionListener(e -> openCustomerManagement());
         operationsMenu.add(customerItem);
 
-        // SEGURIDAD: Solo el ADMIN ve la opción de Parking Management
+        JMenuItem vehicleItem = new JMenuItem("Ingreso de Vehículos");
+        vehicleItem.addActionListener(e -> openVehicleCheckIn());
+        operationsMenu.add(vehicleItem);
+
         if (currentUser.getRole().equalsIgnoreCase("ADMIN")) {
             JMenuItem parkingItem = new JMenuItem("Gestión de Parqueos");
             parkingItem.addActionListener(e -> openParkingManagement());
@@ -84,7 +118,6 @@ public class Dashboard extends JFrame {
         menuBar.add(systemMenu);
         menuBar.add(operationsMenu);
 
-        // --- Admin Restricted Menu (User Management) ---
         if (currentUser.getRole().equalsIgnoreCase("ADMIN")) {
             JMenu adminMenu = createMenu("Administración");
             JMenuItem userMgmtItem = new JMenuItem("Gestión de Usuarios");
@@ -109,59 +142,49 @@ public class Dashboard extends JFrame {
 
         if (confirm == JOptionPane.YES_OPTION) {
             this.dispose();
-            model.data.FileManager fm = new model.data.FileManager();
             view.LoginFrame loginView = new view.LoginFrame();
-            new controller.LoginController(loginView, fm);
+            new controller.LoginController(loginView, this.fileManager);
             loginView.setVisible(true);
         }
     }
 
-    // --- MÉTODOS CORREGIDOS CON DISPOSE PARA EVITAR VENTANAS DUPLICADAS ---
     private void openCustomerManagement() {
         CustomerController custController = new CustomerController(fileManager);
         new CustomerFrame(currentUser, custController).setVisible(true);
-        this.dispose(); // <--- CERRAMOS EL DASHBOARD
+        this.dispose();
     }
 
     private void openParkingManagement() {
-    // Doble validación de seguridad
-    if (currentUser.getRole().equalsIgnoreCase("ADMIN")) {
-        ParkingController parkController = new ParkingController(fileManager);
-        new ParkingManagementFrame(currentUser, parkController).setVisible(true);
-        this.dispose(); 
-    } else {
-        JOptionPane.showMessageDialog(this, 
-            "Access Denied: Only Administrators can manage parking branches.", 
-            "Security Warning", 
-            JOptionPane.WARNING_MESSAGE);
+        if (currentUser.getRole().equalsIgnoreCase("ADMIN")) {
+            ParkingController parkController = new ParkingController(fileManager);
+            new ParkingManagementFrame(currentUser, parkController).setVisible(true);
+            this.dispose();
+        }
     }
-}
 
     private void openUserManagement() {
-    // 1. Verificación de seguridad redundante
-    if (currentUser.getRole().equalsIgnoreCase("ADMIN")) {
-        try {
-            // 2. Instanciar el controlador de usuarios (asegúrate de que el nombre sea correcto)
-            // Se asume que sigue el patrón de recibir el fileManager
-            controller.UserController userController = new controller.UserController(fileManager);
-            
-            // 3. Abrir la ventana de gestión de usuarios (UserManagementFrame)
-            // Pasamos el usuario actual y el controlador
-            new view.UserManagementFrame(currentUser, userController).setVisible(true);
-            
-            // 4. Cerramos el Dashboard para evitar duplicados
-            this.dispose(); 
-            
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error loading User Management: " + ex.getMessage(), 
-                                        "System Error", JOptionPane.ERROR_MESSAGE);
+        if (currentUser.getRole().equalsIgnoreCase("ADMIN")) {
+            try {
+                controller.UserController userController = new controller.UserController(fileManager);
+                new view.UserManagementFrame(currentUser, userController).setVisible(true);
+                this.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+            }
         }
-    } else {
-        JOptionPane.showMessageDialog(this, "User Management is only for System Admins.", 
-                                    "Access Denied", JOptionPane.WARNING_MESSAGE);
     }
-}
 
+    private void openVehicleCheckIn() {
+        try {
+            controller.VehicleController vehicleController = new controller.VehicleController(fileManager);
+            new view.VehicleCheckInFrame(currentUser, vehicleController).setVisible(true);
+            this.dispose();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+        }
+    }
+
+    // Panel interno para el fondo
     class BackgroundPanel extends JPanel {
 
         private Image img;
@@ -180,6 +203,21 @@ public class Dashboard extends JFrame {
             if (img != null) {
                 g.drawImage(img, 0, 0, getWidth(), getHeight(), this);
             }
+        }
+    }
+
+    private void customizeTabTitles() {
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            // Creamos un JLabel para el título
+            JLabel lbl = new JLabel(tabbedPane.getTitleAt(i));
+            lbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            lbl.setForeground(Color.WHITE);
+
+            // Le damos un margen interno para que no se vea apretado
+            lbl.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+
+            // Lo aplicamos a la pestaña
+            tabbedPane.setTabComponentAt(i, lbl);
         }
     }
 }

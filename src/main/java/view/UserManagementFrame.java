@@ -8,6 +8,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import model.entities.User;
 import java.util.List;
+
 /**
  * View for managing system users (ADMIN/CLERK). Clean Architecture: This class
  * is a passive UI that communicates with UserController.
@@ -38,7 +39,6 @@ public class UserManagementFrame extends JFrame {
         setupListeners();
         refreshTableData();
 
-        // Initial load via controller
         try {
             controller.loadInitialUsers();
         } catch (Exception e) {
@@ -71,7 +71,6 @@ public class UserManagementFrame extends JFrame {
         formPanel.add(btnDelete);
         formPanel.add(btnExit);
 
-        // Table setup
         String[] columns = {"Username", "Password", "Rol"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -86,7 +85,6 @@ public class UserManagementFrame extends JFrame {
     }
 
     private void setupListeners() {
-        // Table selection logic
         userTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -94,13 +92,12 @@ public class UserManagementFrame extends JFrame {
             }
         });
 
-        // Button Actions
         btnAdd.addActionListener(e -> handleRegistration());
         btnUpdate.addActionListener(e -> handleUpdate());
         btnDelete.addActionListener(e -> handleDelete());
         btnExit.addActionListener(e -> {
-            this.dispose(); // Cierra gestión de usuarios
-            new Dashboard(currentUser, controller.getFileManager()).setVisible(true); // Vuelve al menú
+            this.dispose();
+            new Dashboard(currentUser, controller.getFileManager()).setVisible(true);
         });
     }
 
@@ -150,11 +147,10 @@ public class UserManagementFrame extends JFrame {
             txtPass.setText(tableModel.getValueAt(row, 1).toString());
             comboRole.setSelectedItem(tableModel.getValueAt(row, 2).toString());
 
-            txtUser.setEditable(false); // Primary key should not be edited
+            txtUser.setEditable(false);
         }
     }
 
-    // --- Helper Getters & Setters ---
     public String getUsername() {
         return txtUser.getText().trim();
     }
@@ -185,23 +181,19 @@ public class UserManagementFrame extends JFrame {
     private void showInfoMessage(String msg) {
         JOptionPane.showMessageDialog(this, msg, "Information", JOptionPane.INFORMATION_MESSAGE);
     }
-    
+
     public void refreshTableData() {
-    // 1. Obtener el modelo de la tabla
-    DefaultTableModel model = (DefaultTableModel) userTable.getModel();
-    model.setRowCount(0); // Limpiar filas viejas
+        DefaultTableModel model = (DefaultTableModel) userTable.getModel();
+        model.setRowCount(0);
 
-    try {
-        // 2. Pedir la lista de usuarios al controlador
-        // Se asume que el método en UserController devuelve List<String[]>
-        List<String[]> user = controller.getAllUsers(); 
+        try {
+            List<String[]> user = controller.getAllUsers();
 
-        for (String[] users : user) {
-            // Se asume el orden: Username, Password, Role
-            model.addRow(users);
+            for (String[] users : user) {
+                model.addRow(users);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error loading users: " + e.getMessage());
         }
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this, "Error loading users: " + e.getMessage());
     }
-}
 }

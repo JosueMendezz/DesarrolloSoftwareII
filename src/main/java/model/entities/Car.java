@@ -1,41 +1,31 @@
 package model.entities;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
- * Entity representing a Car vehicle.
- * Implements specific fee calculation and properties for cars.
+ * Entity representing a Car vehicle. Implements specific fee calculation and
+ * properties for cars.
  */
 public class Car extends Vehicle {
 
-    private static final double HOURLY_RATE = 800.0;
-    private int numberOfDoors;
+    private static final double HOURLY_RATE = 2000.0;
 
-    public Car() {
-        super();
+    public Car(String plate, String type, String brand, String model, String color, String ownerId, List<String> additionalResponsible, LocalDateTime entryTime) {
+        super(plate, type, brand, model, color, ownerId, additionalResponsible, entryTime);
     }
 
-    public Car(int numberOfDoors, String licensePlate, String brand, String model, LocalDateTime entryTime) {
-        super(licensePlate, brand, model, entryTime);
-        this.numberOfDoors = numberOfDoors;
+    @Override
+    public double getHourlyRate() {
+        return HOURLY_RATE;
     }
 
-    /**
-     * Calculates the parking fee based on the car's hourly rate.
-     * @param hours Duration of stay in hours.
-     * @return Total fee calculation.
-     */
     @Override
     public double calculateFee(long hours) {
         return hours * HOURLY_RATE;
     }
 
-    // Getters and Setters
-    public int getNumberOfDoors() {
-        return numberOfDoors;
-    }
-
-    public void setNumberOfDoors(int numberOfDoors) {
-        this.numberOfDoors = numberOfDoors;
+    public double calculateFee(LocalDateTime exitTime) {
+        return getHoursParked(exitTime) * HOURLY_RATE;
     }
 }

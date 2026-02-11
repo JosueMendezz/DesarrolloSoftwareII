@@ -33,7 +33,6 @@ public class ParkingManagementFrame extends JFrame {
     private void setupConfiguration() {
         setTitle("J-Node - Parking Management");
         setSize(700, 450);
-        // DISPOSE_ON_CLOSE está bien aquí porque el Dashboard controla el proceso principal
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
         setLocationRelativeTo(null);
@@ -55,7 +54,7 @@ public class ParkingManagementFrame extends JFrame {
 
         tblParkings = new JTable(tableModel);
         tblParkings.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblParkings.getTableHeader().setReorderingAllowed(false); 
+        tblParkings.getTableHeader().setReorderingAllowed(false);
         add(new JScrollPane(tblParkings), BorderLayout.CENTER);
 
         JPanel panelActions = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
@@ -82,8 +81,7 @@ public class ParkingManagementFrame extends JFrame {
         btnDelete.addActionListener(e -> handleDelete());
 
         btnBack.addActionListener(e -> {
-            this.dispose(); 
-            // Usamos el constructor que inyecta el FileManager
+            this.dispose();
             new Dashboard(currentUser, controller.getFileManager()).setVisible(true);
         });
     }
@@ -96,7 +94,6 @@ public class ParkingManagementFrame extends JFrame {
                 int total = Integer.parseInt(tableModel.getValueAt(selectedRow, 2).toString());
                 int pref = Integer.parseInt(tableModel.getValueAt(selectedRow, 3).toString());
 
-                // Crear objeto temporal para edición
                 ParkingLot parking = new ParkingLot(0, name, total, pref);
 
                 new ParkingCreateFrame(currentUser, controller, parking).setVisible(true);
@@ -117,14 +114,14 @@ public class ParkingManagementFrame extends JFrame {
         if (selectedRow != -1) {
             String name = tableModel.getValueAt(selectedRow, 1).toString();
             int confirm = JOptionPane.showConfirmDialog(this,
-                    "Desea eliminar el parqueo" + name + "?",
+                    "Desea eliminar el parqueo " + name + "?",
                     "Confirm Deletion", JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
                     controller.deleteParkingBranch(name);
                     refreshTableData();
-                    JOptionPane.showMessageDialog(this, "Prqueo eliminado exitosamente.");
+                    JOptionPane.showMessageDialog(this, "Parqueo eliminado exitosamente.");
                 } catch (Exception ex) {
                     showError("Error deleting branch: " + ex.getMessage());
                 }
@@ -135,19 +132,18 @@ public class ParkingManagementFrame extends JFrame {
     }
 
     public void refreshTableData() {
-        tableModel.setRowCount(0); 
+        tableModel.setRowCount(0);
         try {
             List<String[]> data = controller.loadAllParkings();
             int idCounter = 1;
 
             for (String[] row : data) {
-                // CAMBIO DE SEGURIDAD: Verificamos que no sea nulo y tenga los 3 datos requeridos
                 if (row != null && row.length >= 3) {
                     Object[] tableRow = {
                         idCounter++,
                         row[0], // Nombre
                         row[1], // Total
-                        row[2]  // Preferencial
+                        row[2] // Preferencial
                     };
                     tableModel.addRow(tableRow);
                 }

@@ -10,8 +10,8 @@ import java.util.List;
 import model.entities.User;
 
 /**
- * View for Customer Management.
- * Implements clean separation: no business logic, only UI events and error display.
+ * View for Customer Management. Implements clean separation: no business logic,
+ * only UI events and error display.
  */
 public class CustomerFrame extends JFrame {
 
@@ -22,17 +22,17 @@ public class CustomerFrame extends JFrame {
     private final JButton updateButton = new JButton("Modificar");
     private final JButton deleteButton = new JButton("Eliminar");
     private final JButton btnExit = new JButton("Salir");
-    
+
     private JTable customerTable;
     private DefaultTableModel tableModel;
-    
+
     private final User currentUser;
     private final CustomerController controller;
 
     public CustomerFrame(User user, CustomerController controller) {
         this.currentUser = user;
         this.controller = controller;
-        
+
         setupConfiguration();
         setupComponents();
         setupListeners();
@@ -81,23 +81,22 @@ public class CustomerFrame extends JFrame {
         updateButton.addActionListener(e -> handleUpdate());
         deleteButton.addActionListener(e -> handleDelete());
         btnExit.addActionListener(e -> {
-    this.dispose();
-    new Dashboard(currentUser, controller.getFileManager()).setVisible(true);
-});
-        
+            this.dispose();
+            new Dashboard(currentUser, controller.getFileManager()).setVisible(true);
+        });
+
         // Selection listener to fill fields when a row is clicked
         customerTable.getSelectionModel().addListSelectionListener(e -> fillFieldsFromSelectedRow());
     }
 
     private void handleRegistration() {
         try {
-            // CORRECCIÓN: Se eliminó el getTableDataList() porque el controlador ya maneja los datos internos.
             controller.registerCustomer(
-                txtId.getText(), 
-                txtName.getText(), 
-                chkPreferential.isSelected()
+                    txtId.getText(),
+                    txtName.getText(),
+                    chkPreferential.isSelected()
             );
-            
+
             refreshTable();
             clearFields();
             JOptionPane.showMessageDialog(this, "El cliente ha sido registrado exitosamente.");
@@ -109,14 +108,13 @@ public class CustomerFrame extends JFrame {
     private void handleUpdate() {
         try {
             int selectedRow = customerTable.getSelectedRow();
-            // CORRECCIÓN: Se mantiene getTableDataList para actualizar el archivo completo basado en el estado de la tabla.
             controller.updateCustomer(
-                selectedRow, 
-                txtName.getText(), 
-                chkPreferential.isSelected(), 
-                getTableDataList()
+                    selectedRow,
+                    txtName.getText(),
+                    chkPreferential.isSelected(),
+                    getTableDataList()
             );
-            
+
             refreshTable();
             clearFields();
             JOptionPane.showMessageDialog(this, "Cliente actualizado exitosamente.");
@@ -128,9 +126,8 @@ public class CustomerFrame extends JFrame {
     private void handleDelete() {
         try {
             int selectedRow = customerTable.getSelectedRow();
-            // CORRECCIÓN: Se mantiene getTableDataList para sincronizar el borrado.
             controller.removeCustomer(selectedRow, getTableDataList());
-            
+
             refreshTable();
             clearFields();
             JOptionPane.showMessageDialog(this, "Cliente eliminado de la base de datos.");
@@ -158,8 +155,8 @@ public class CustomerFrame extends JFrame {
     }
 
     /**
-     * Helper to extract current table state into a pure List for the Controller.
-     * Used for update/delete synchronization.
+     * Helper to extract current table state into a pure List for the
+     * Controller. Used for update/delete synchronization.
      */
     private List<String[]> getTableDataList() {
         List<String[]> data = new ArrayList<>();

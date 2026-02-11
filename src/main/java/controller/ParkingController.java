@@ -18,25 +18,22 @@ public class ParkingController {
         this.fileManager = fileManager;
     }
 
-    // ESTE ES EL MÉTODO QUE LLAMA TU VISTA EN LA LÍNEA 88
-    // Lo unificamos para que coincida con el nombre que pusiste en el Frame
     public void prepareTempParking(String name, int total, int pref) {
         this.tempParking = new ParkingLot(0, name, total, pref);
-        // Inicializamos el arreglo de espacios para evitar NullPointerException
         this.tempParking.setSpaces(new ParkingSpace[total]);
         this.spacesConfigured = 0;
         this.prefSpacesAssigned = 0;
     }
 
-    // Validación de nombre duplicado corregida (usando el separador '|')
     public void validateParkingName(String name) throws Exception {
-        List<String> existingLines = fileManager.readAllParkingLines(); 
+        List<String> existingLines = fileManager.readAllParkingLines();
         for (String line : existingLines) {
-            if (line.trim().isEmpty()) continue;
-            // IMPORTANTE: Tu archivo usa | según el método formatParkingLine
-            String[] parts = line.split("\\|"); 
+            if (line.trim().isEmpty()) {
+                continue;
+            }
+            String[] parts = line.split("\\|");
             if (parts.length > 0 && parts[0].equalsIgnoreCase(name.trim())) {
-                throw new Exception("Error: El parqueo '" + name + "' ya existe. Usa otro nombre.");
+                throw new Exception("Error: El parqueo '" + name + "' ya existe.");
             }
         }
     }
@@ -46,10 +43,8 @@ public class ParkingController {
         int prefRemaining = getPrefRemaining();
 
         if (!isPref && (totalRemaining - qty) < prefRemaining) {
-            throw new Exception("Error: Debes reservar al menos " + prefRemaining + 
-                                " espacios para la cuota preferencial pendiente.");
+            throw new Exception("Error: Debes reservar espacios para la cuota preferencial.");
         }
-
         if (isPref && qty > prefRemaining) {
             throw new Exception("La cantidad excede la cuota preferencial restante.");
         }
@@ -57,8 +52,9 @@ public class ParkingController {
         for (int i = 0; i < qty; i++) {
             createSingleSpace(isPref, type);
         }
-        
-        if (isPref) prefSpacesAssigned += qty;
+        if (isPref) {
+            prefSpacesAssigned += qty;
+        }
     }
 
     private void createSingleSpace(boolean isPref, String type) {
@@ -84,7 +80,9 @@ public class ParkingController {
         boolean exists = false;
 
         for (String line : lines) {
-            if (line.trim().isEmpty()) continue;
+            if (line.trim().isEmpty()) {
+                continue;
+            }
             String[] data = line.split("\\|");
             if (data[0].equalsIgnoreCase(oldName)) {
                 updatedLines.add(formatParkingLine());
@@ -96,12 +94,47 @@ public class ParkingController {
         if (!exists) {
             updatedLines.add(formatParkingLine());
         }
+
         fileManager.saveParkingData(updatedLines);
+        // generamos el archivo de configuración detallada
+        saveDetailedSpaceConfig();
+    }
+
+    private void saveDetailedSpaceConfig() throws IOException {
+        String fileName = tempParking.getName() + "_config.txt";
+        List<String> configLines = new ArrayList<>();
+
+        for (ParkingSpace space : tempParking.getSpaces()) {
+            if (space != null) {
+                // Usamos los nombres de createSingleSpace
+                String line = String.format("%d|%s|%b",
+                        space.getSpaceNumber(),
+                        space.getVehicleTypesSupported(),
+                        space.isIsPreferential());
+                configLines.add(line);
+            }
+        }
+        fileManager.saveLinesToFile(fileName, configLines);
     }
 
     private String formatParkingLine() {
         return String.format("%s|%d|%d", tempParking.getName(),
                 tempParking.getNumberOfSpaces(), tempParking.getPreferentialSpaces());
+    }
+
+    public void deleteParkingBranch(String name) throws IOException {
+        List<String> lines = fileManager.readAllParkingLines();
+        List<String> remaining = new ArrayList<>();
+        for (String line : lines) {
+            if (line.trim().isEmpty()) {
+                continue;
+            }
+            if (!line.split("\\|")[0].equalsIgnoreCase(name)) {
+                remaining.add(line);
+            }
+        }
+        fileManager.saveParkingData(remaining);
+        new java.io.File(name + "_config.txt").delete();
     }
 
     public int getRemainingSpaces() {
@@ -116,6 +149,10 @@ public class ParkingController {
         return tempParking != null && getRemainingSpaces() == 0 && getPrefRemaining() <= 0;
     }
 
+    public ParkingLot getTempParking() {
+        return this.tempParking;
+    }
+
     public List<String[]> loadAllParkings() throws IOException {
         List<String> lines = fileManager.readAllParkingLines();
         List<String[]> data = new ArrayList<>();
@@ -126,19 +163,8 @@ public class ParkingController {
         }
         return data;
     }
-    
-    public void deleteParkingBranch(String name) throws IOException {
-    List<String> lines = fileManager.readAllParkingLines();
-    List<String> remaining = new ArrayList<>();
-    for (String line : lines) {
-        if (line.trim().isEmpty()) continue; // Seguridad para líneas vacías
-        // Usamos el separador | que definimos antes
-        if (!line.split("\\|")[0].equalsIgnoreCase(name)) {
-            remaining.add(line);
-        }
+
+    public FileManager getFileManager() {
+        return this.fileManager;
     }
-    fileManager.saveParkingData(remaining);
-}
-    public ParkingLot getTempParking() { return this.tempParking; }
-    public FileManager getFileManager() { return this.fileManager; }
 }

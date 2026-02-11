@@ -1,8 +1,8 @@
 package model.entities;
 
 /**
- * Entity representing a Clerk/Operator user.
- * Limited access role compared to Admin.
+ * Entity representing a Clerk/Operator user. Limited access role compared to
+ * Admin.
  */
 public class Clerk extends User {
 

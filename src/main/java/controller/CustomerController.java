@@ -2,6 +2,7 @@ package controller;
 
 import model.data.FileManager;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CustomerController {
@@ -12,7 +13,7 @@ public class CustomerController {
         this.fileManager = fileManager;
     }
 
-   public void registerCustomer(String id, String name, boolean isPreferential) throws IOException {
+    public void registerCustomer(String id, String name, boolean isPreferential) throws IOException {
         validateCustomerData(id, name);
         // Cargamos datos actuales para verificar duplicados
         List<String[]> currentData = getAllCustomers();
@@ -21,9 +22,9 @@ public class CustomerController {
         fileManager.saveCustomer(id, name, isPreferential);
     }
 
-    public void removeCustomer(int selectedRow, List<String[]> tableData) 
+    public void removeCustomer(int selectedRow, List<String[]> tableData)
             throws IOException, IllegalStateException {
-        
+
         if (selectedRow < 0) {
             throw new IllegalStateException("Debe seleccionar un cliente de la tabla.");
         }
@@ -32,9 +33,9 @@ public class CustomerController {
         syncFileData(tableData);
     }
 
-    public void updateCustomer(int selectedRow, String newName, boolean isPreferential, List<String[]> tableData) 
+    public void updateCustomer(int selectedRow, String newName, boolean isPreferential, List<String[]> tableData)
             throws IOException, IllegalStateException, IllegalArgumentException {
-        
+
         if (selectedRow < 0) {
             throw new IllegalStateException("Debe seleccionar un cliente.");
         }
@@ -46,12 +47,19 @@ public class CustomerController {
         String[] customer = tableData.get(selectedRow);
         customer[1] = newName.trim();
         customer[2] = String.valueOf(isPreferential);
-        
+
         syncFileData(tableData);
     }
 
     public List<String[]> getAllCustomers() throws IOException {
-        return fileManager.loadCustomersRaw();
+        // Le pedimos al modelo (FileManager) que nos de las líneas del archivo
+        List<String> lines = fileManager.readAllCustomers();
+        List<String[]> customerList = new ArrayList<>();
+
+        for (String line : lines) {
+            customerList.add(line.split(","));
+        }
+        return customerList;
     }
 
     private void validateCustomerData(String id, String name) throws IllegalArgumentException {
@@ -71,8 +79,8 @@ public class CustomerController {
     private void syncFileData(List<String[]> data) throws IOException {
         fileManager.overwriteCustomers(data);
     }
-    
+
     public FileManager getFileManager() {
-    return this.fileManager;
-}
+        return this.fileManager;
+    }
 }

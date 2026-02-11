@@ -3,8 +3,8 @@ package model.entities;
 import java.util.Arrays;
 
 /**
- * Entity representing a Parking Lot or a specific parking level.
- * Stores the layout and total capacity of parking spaces.
+ * Entity representing a Parking Lot or a specific parking level. Stores the
+ * layout and total capacity of parking spaces.
  */
 public class ParkingLot {
 
@@ -14,7 +14,6 @@ public class ParkingLot {
     private int preferentialSpaces;
     private ParkingSpace[] spaces;
 
-    // Constructor vacío - ¡AHORA SEGURO!
     public ParkingLot() {
         // Inicializamos con valores por defecto para evitar NullPointerException
         this.spaces = new ParkingSpace[0];
@@ -25,23 +24,32 @@ public class ParkingLot {
         this.name = name;
         this.numberOfSpaces = numberOfSpaces;
         this.preferentialSpaces = preferentialSpaces;
-        // Inicializamos el arreglo con el tamaño exacto solicitado
         this.spaces = new ParkingSpace[numberOfSpaces];
     }
 
-    // --- GETTERS Y SETTERS ---
+    public int getId() {
+        return id;
+    }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getName() {
+        return name;
+    }
 
-    public int getNumberOfSpaces() { return numberOfSpaces; }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getNumberOfSpaces() {
+        return numberOfSpaces;
+    }
 
     /**
-     * Al cambiar el número de espacios, debemos redimensionar el arreglo
-     * para que el controlador tenga donde guardar los objetos ParkingSpace.
+     * Al cambiar el número de espacios, debemos redimensionar el arreglo para
+     * que el controlador tenga donde guardar los objetos ParkingSpace.
      */
     public void setNumberOfSpaces(int numberOfSpaces) {
         this.numberOfSpaces = numberOfSpaces;
@@ -66,7 +74,7 @@ public class ParkingLot {
 
     @Override
     public String toString() {
-        return "ParkingLot [id=" + id + ", name=" + name + ", numberOfSpaces=" + numberOfSpaces 
+        return "ParkingLot [id=" + id + ", name=" + name + ", numberOfSpaces=" + numberOfSpaces
                 + ", preferentialSpaces=" + preferentialSpaces + ", spaces=" + Arrays.toString(spaces) + "]";
     }
 }

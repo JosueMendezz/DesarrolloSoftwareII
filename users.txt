@@ -1,4 +1,4 @@
 admin,1234,ADMIN
 cajero1,0000,OPERATOR
 bray,147,ADMIN
-eri,147,OPERATOR
+eri,147,ADMIN

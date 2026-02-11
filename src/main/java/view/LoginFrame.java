@@ -6,8 +6,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 /**
- * Pure View for the Login screen.
- * Strictly manages UI components and exposes data through getters.
+ * Pure View for the Login screen. Strictly manages UI components and exposes
+ * data through getters.
  */
 public class LoginFrame extends JFrame {
 
@@ -33,7 +33,7 @@ public class LoginFrame extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         mainPanel.add(new JLabel("Username:"), gbc);
-        
+
         gbc.gridx = 1;
         txtUsername = new JTextField(15);
         mainPanel.add(txtUsername, gbc);
@@ -42,7 +42,7 @@ public class LoginFrame extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 1;
         mainPanel.add(new JLabel("Password:"), gbc);
-        
+
         gbc.gridx = 1;
         txtPassword = new JPasswordField(15);
         mainPanel.add(txtPassword, gbc);
@@ -59,8 +59,6 @@ public class LoginFrame extends JFrame {
         add(mainPanel);
     }
 
-    // --- Getters for Controller Access ---
-
     public String getUsername() {
         return txtUsername.getText().trim();
     }
@@ -70,7 +68,6 @@ public class LoginFrame extends JFrame {
     }
 
     // --- UI Feedback Methods ---
-
     public void showErrorMessage(String message) {
         JOptionPane.showMessageDialog(this, message, "System Error", JOptionPane.ERROR_MESSAGE);
     }
@@ -85,16 +82,16 @@ public class LoginFrame extends JFrame {
     public void addLoginListener(ActionListener listener) {
         btnLogin.addActionListener(listener);
     }
-    
+
     public JButton getBtnLogin() {
-    return btnLogin; // Asegúrate de que tu variable se llame así
-}
+        return btnLogin; 
+    }
 
-public JTextField getTxtUser() {
-    return txtUsername; // Asegúrate de que tu variable se llame así
-}
+    public JTextField getTxtUser() {
+        return txtUsername;
+    }
 
-public JPasswordField getTxtPassword() {
-    return txtPassword; // Asegúrate de que tu variable se llame así
-}
+    public JPasswordField getTxtPassword() {
+        return txtPassword;
+    }
 }

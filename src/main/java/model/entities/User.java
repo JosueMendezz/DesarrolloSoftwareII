@@ -1,8 +1,8 @@
 package model.entities;
 
 /**
- * Abstract base class for all system users.
- * Provides core credentials and enforces role identification.
+ * Abstract base class for all system users. Provides core credentials and
+ * enforces role identification.
  */
 public abstract class User {
 

@@ -1,41 +1,31 @@
 package model.entities;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
- * Entity representing a Motorcycle vehicle.
- * Implements specific fee calculation and engine displacement properties.
+ * Entity representing a Motorcycle vehicle. Implements specific fee calculation
+ * and engine displacement properties.
  */
 public class Motorcycle extends Vehicle {
 
-    private static final double HOURLY_RATE = 400.0;
-    private int cylinderCapacity;
+    private static final double HOURLY_RATE = 1000.0;
 
-    public Motorcycle() {
-        super();
+    public Motorcycle(String plate, String type, String brand, String model, String color, String ownerId, List<String> additionalResponsible, LocalDateTime entryTime) {
+        super(plate, type, brand, model, color, ownerId, additionalResponsible, entryTime);
     }
 
-    public Motorcycle(int cylinderCapacity, String licensePlate, String brand, String model, LocalDateTime entryTime) {
-        super(licensePlate, brand, model, entryTime);
-        this.cylinderCapacity = cylinderCapacity;
+    @Override
+    public double getHourlyRate() {
+        return HOURLY_RATE;
     }
 
-    /**
-     * Calculates the parking fee based on the motorcycle's hourly rate.
-     * @param hours Duration of stay in hours.
-     * @return Total fee calculation.
-     */
     @Override
     public double calculateFee(long hours) {
         return hours * HOURLY_RATE;
     }
 
-    // Getters and Setters
-    public int getCylinderCapacity() {
-        return cylinderCapacity;
-    }
-
-    public void setCylinderCapacity(int cylinderCapacity) {
-        this.cylinderCapacity = cylinderCapacity;
+    public double calculateFee(LocalDateTime exitTime) {
+        return getHoursParked(exitTime) * HOURLY_RATE;
     }
 }

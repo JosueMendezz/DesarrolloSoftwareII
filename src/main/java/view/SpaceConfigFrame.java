@@ -6,8 +6,9 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * View for configuring individual space attributes (type and preferential status).
- * Operates on a block-allocation logic until the total capacity is met.
+ * View for configuring individual space attributes (type and preferential
+ * status). Operates on a block-allocation logic until the total capacity is
+ * met.
  */
 public class SpaceConfigFrame extends JFrame {
 
@@ -114,7 +115,7 @@ public class SpaceConfigFrame extends JFrame {
         try {
             // We delegate the saving process to the controller
             controller.saveParkingConfiguration(oldName);
-            
+
             JOptionPane.showMessageDialog(this, "Parqueo Creado Exitosamente");
             // Return to management with an injected controller (Standard practice)
             new ParkingManagementFrame(currentUser, controller).setVisible(true);
@@ -136,25 +137,23 @@ public class SpaceConfigFrame extends JFrame {
     }
 
     private void updateUI() {
-    int totalRemaining = controller.getRemainingSpaces();
-    int prefMissing = controller.getPrefRemaining();
+        int totalRemaining = controller.getRemainingSpaces();
+        int prefMissing = controller.getPrefRemaining();
 
-    lblRemaining.setText("<html>Physical spaces left: <b>" + totalRemaining + "</b><br>"
-            + "Pending preferential quota: <b>" + prefMissing + "</b></html>");
+        lblRemaining.setText("<html>Physical spaces left: <b>" + totalRemaining + "</b><br>"
+                + "Pending preferential quota: <b>" + prefMissing + "</b></html>");
 
-    updateQtyCombo(totalRemaining);
-    
-    // LÓGICA DE APOYO: Si los espacios que quedan son iguales a la cuota pendiente,
-    // obligamos a que el checkbox esté marcado y lo deshabilitamos.
-    if (totalRemaining > 0 && totalRemaining == prefMissing) {
-        chkIsPreferential.setSelected(true);
-        chkIsPreferential.setEnabled(false); 
-    } else {
-        chkIsPreferential.setEnabled(totalRemaining > 0);
+        updateQtyCombo(totalRemaining);
+
+        if (totalRemaining > 0 && totalRemaining == prefMissing) {
+            chkIsPreferential.setSelected(true);
+            chkIsPreferential.setEnabled(false);
+        } else {
+            chkIsPreferential.setEnabled(totalRemaining > 0);
+        }
+
+        btnFinish.setEnabled(totalRemaining > 0 || controller.isConfigFinished());
     }
-
-    btnFinish.setEnabled(totalRemaining > 0 || controller.isConfigFinished());
-}
 
     private void updateQtyCombo(int max) {
         comboQtyToConfig.removeAllItems();

@@ -1,34 +1,57 @@
 package model.entities;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
- * Abstract base class representing a generic Vehicle.
- * Provides shared attributes and enforces fee calculation for subclasses.
+ * Abstract base class representing a generic Vehicle. Provides shared
+ * attributes and enforces fee calculation for subclasses.
  */
 public abstract class Vehicle {
 
-    private String licensePlate;
+    private String plate;
+    private String type;
     private String brand;
     private String model;
-    private LocalDateTime entryTime;
+    private String color;
+    private String ownerId;
+    private List<String> additionalResponsible;
+    protected LocalDateTime entryTime;
 
-    public Vehicle() {
-    }
-
-    public Vehicle(String licensePlate, String brand, String model, LocalDateTime entryTime) {
-        this.licensePlate = licensePlate;
+    public Vehicle(String plate, String type, String brand, String model, String color, String ownerId, List<String> additionalResponsible, LocalDateTime entryTime) {
+        this.plate = plate;
+        this.type = type;
         this.brand = brand;
         this.model = model;
+        this.color = color;
+        this.ownerId = ownerId;
+        this.additionalResponsible = additionalResponsible;
         this.entryTime = entryTime;
     }
 
-    public String getLicensePlate() {
-        return licensePlate;
+    public LocalDateTime getEntryTime() {
+        return entryTime;
     }
 
-    public void setLicensePlate(String licensePlate) {
-        this.licensePlate = licensePlate;
+    public void setEntryTime(LocalDateTime entryTime) {
+        this.entryTime = entryTime;
+    }
+
+    public String getPlate() {
+        return plate;
+    }
+
+    public void setPlate(String plate) {
+        this.plate = plate;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getBrand() {
@@ -47,18 +70,41 @@ public abstract class Vehicle {
         this.model = model;
     }
 
-    public LocalDateTime getEntryTime() {
-        return entryTime;
+    public String getColor() {
+        return color;
     }
 
-    public void setEntryTime(LocalDateTime entryTime) {
-        this.entryTime = entryTime;
+    public void setColor(String color) {
+        this.color = color;
     }
 
-    /**
-     * Abstract method to be implemented by specific vehicle types.
-     * @param hours Total hours spent in the parking lot.
-     * @return The calculated fee based on the vehicle type's rate.
-     */
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public List<String> getAdditionalResponsible() {
+        return additionalResponsible;
+    }
+
+    public void setAdditionalResponsible(List<String> additionalResponsible) {
+        this.additionalResponsible = additionalResponsible;
+    }
+
+    public abstract double getHourlyRate();
+
     public abstract double calculateFee(long hours);
+
+    public long getHoursParked(LocalDateTime exitTime) {
+        if (entryTime == null) {
+            return 0;
+        }
+        Duration duration = Duration.between(entryTime, exitTime);
+        long hours = duration.toHours();
+        // Si pasó un minuto de la hora, se cobra la siguiente
+        return (duration.toMinutes() % 60 > 0) ? hours + 1 : hours;
+    }
 }

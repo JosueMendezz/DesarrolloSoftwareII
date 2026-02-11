@@ -83,11 +83,9 @@ public class ParkingCreateFrame extends JFrame {
                     throw new Exception("El Nombre del parqueo no puede quedar vacío.");
                 }
 
-                // Conversión segura de Spinners
                 int total = ((Number) spinTotalSpaces.getValue()).intValue();
                 int pref = ((Number) spinPreferential.getValue()).intValue();
 
-                // Validación de nombre duplicado (solo si es nuevo o cambió el nombre)
                 if (parkingToEdit == null || !parkingToEdit.getName().equalsIgnoreCase(name)) {
                     controller.validateParkingName(name);
                 }
@@ -98,10 +96,8 @@ public class ParkingCreateFrame extends JFrame {
 
                 String originalName = (parkingToEdit != null) ? parkingToEdit.getName() : null;
 
-                // Preparamos los datos en el controlador
                 controller.prepareTempParking(name, total, pref);
 
-                // IMPORTANTE: dispose() antes de la siguiente ventana
                 new SpaceConfigFrame(controller, currentUser, originalName).setVisible(true);
                 this.dispose();
 
@@ -110,13 +106,11 @@ public class ParkingCreateFrame extends JFrame {
             }
         });
 
-        // BOTÓN BACK: Regresa a la lista de gestión
         btnBack.addActionListener(e -> {
             this.dispose();
             new ParkingManagementFrame(currentUser, controller).setVisible(true);
         });
 
-        // BOTÓN EXIT: Regresa al Menú Principal (Dashboard)
         btnExit.addActionListener(e -> {
             this.dispose();
             new Dashboard(currentUser, controller.getFileManager()).setVisible(true);
