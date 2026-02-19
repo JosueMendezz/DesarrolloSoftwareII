@@ -1,4 +1,4 @@
-admin,1234,ADMIN
-cajero1,0000,OPERATOR
-bray,147,ADMIN
-eri,147,ADMIN
+jms23,2323,ADMIN,Josue Mendez,TODOS
+ericka,1234,ADMIN,Ericka Barrantes,TODOS
+bray,0000,ADMIN,Brayan Murillo,TODOS
+dmora,1111,OPERATOR,Dario Mora,A

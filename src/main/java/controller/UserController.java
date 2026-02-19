@@ -8,49 +8,38 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
-/**
- * Controller for User Management. Bridge between UserManagementFrame and
- * FileManager.
- */
 public class UserController {
 
     private final FileManager fileManager;
-    private List<User> cachedUsers; // Local state to avoid constant disk reading
+    private List<User> cachedUsers;
 
     public UserController(FileManager fileManager) {
         this.fileManager = fileManager;
         this.cachedUsers = new ArrayList<>();
     }
 
-    /**
-     * Initial data load for the view's table.
-     */
     public void loadInitialUsers() throws IOException {
         this.cachedUsers = fileManager.loadUsers();
     }
 
-    /**
-     * Logic for registering a new user.
-     */
-    public void processUserRegistration(String username, String password, String role) throws Exception {
-        validateInput(username, password);
+    public void processUserRegistration(String user, String pass, String role, String name, String sede) throws Exception {
+        if (user.isEmpty() || pass.isEmpty() || name.isEmpty()) {
+            throw new Exception("Error: Todos los campos son obligatorios.");
+        }
 
-        if (isUsernameDuplicate(username)) {
-            throw new Exception("El nombre de Usuario ya existe.");
+        if (isUsernameDuplicate(user)) {
+            throw new Exception("El nombre de usuario ya existe.");
         }
 
         User newUser = role.equalsIgnoreCase("ADMIN")
-                ? new Admin(username, password)
-                : new Clerk(username, password);
+                ? new Admin(user, pass, name, sede)
+                : new Clerk(user, pass, name, sede);
 
         cachedUsers.add(newUser);
         fileManager.saveUsers(cachedUsers);
     }
 
-    /**
-     * Logic for updating an existing user.
-     */
-    public void processUserUpdate(String username, String password, String role) throws Exception {
+    public void processUserUpdate(String username, String password, String role, String name, String sede) throws Exception {
         validateInput(username, password);
 
         int index = findUserIndex(username);
@@ -59,16 +48,13 @@ public class UserController {
         }
 
         User updatedUser = role.equalsIgnoreCase("ADMIN")
-                ? new Admin(username, password)
-                : new Clerk(username, password);
+                ? new Admin(username, password, name, sede)
+                : new Clerk(username, password, name, sede);
 
         cachedUsers.set(index, updatedUser);
         fileManager.saveUsers(cachedUsers);
     }
 
-    /**
-     * Logic for deleting a user.
-     */
     public void processUserDeletion(String username) throws Exception {
         int index = findUserIndex(username);
         if (index == -1) {
@@ -79,7 +65,6 @@ public class UserController {
         fileManager.saveUsers(cachedUsers);
     }
 
-    // --- Internal Helpers ---
     private void validateInput(String user, String pass) throws Exception {
         if (user.isEmpty() || pass.isEmpty()) {
             throw new Exception("Los campos no pueden quedar vacíos.");
@@ -114,10 +99,28 @@ public class UserController {
 
         for (String line : lines) {
             if (!line.trim().isEmpty()) {
-                // Corta la línea por la coma: admin,1234,ADMIN
                 userList.add(line.split(","));
             }
         }
         return userList;
+    }
+
+    public User validateLogin(String username, String password) {
+        List<String[]> allUsers = getAllUsers();
+
+        for (String[] row : allUsers) {
+            if (row[0].equals(username) && row[1].equals(password)) {
+                String role = row[2];
+                String name = row[3];
+                String sede = row[4];
+
+                if (role.equalsIgnoreCase("ADMIN")) {
+                    return new Admin(row[0], row[1], name, sede);
+                } else {
+                    return new Clerk(row[0], row[1], name, sede);
+                }
+            }
+        }
+        return null;
     }
 }

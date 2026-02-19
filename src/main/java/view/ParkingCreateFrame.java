@@ -25,7 +25,7 @@ public class ParkingCreateFrame extends JFrame {
         this.controller = controller;
         this.parkingToEdit = null;
         setupLayout();
-        setTitle("J-Node - Create New Parking Lot");
+        setTitle("J-Node - Crear nuevo parqueo ");
     }
 
     public ParkingCreateFrame(User user, ParkingController controller, ParkingLot existingParking) {
@@ -35,7 +35,7 @@ public class ParkingCreateFrame extends JFrame {
 
         setupLayout();
         loadExistingData();
-        setTitle("J-Node - Edit Branch: " + existingParking.getName());
+        setTitle("J-Node - Editar sede: " + existingParking.getName());
         btnNext.setText("Modificar Espacios");
     }
 
@@ -78,26 +78,22 @@ public class ParkingCreateFrame extends JFrame {
         btnNext.addActionListener(e -> {
             try {
                 String name = txtName.getText().trim();
+                int total = (int) spinTotalSpaces.getValue();
+                int pref = (int) spinPreferential.getValue();
 
-                if (name.isEmpty()) {
-                    throw new Exception("El Nombre del parqueo no puede quedar vacío.");
+                String nameInDatabase = (parkingToEdit != null) ? parkingToEdit.getName() : name;
+
+                if (parkingToEdit != null) {
+                    controller.validatePreferentialQuota(nameInDatabase, pref);
                 }
 
-                int total = ((Number) spinTotalSpaces.getValue()).intValue();
-                int pref = ((Number) spinPreferential.getValue()).intValue();
-
-                if (parkingToEdit == null || !parkingToEdit.getName().equalsIgnoreCase(name)) {
-                    controller.validateParkingName(name);
-                }
-
-                if (pref > total) {
-                    throw new Exception("Los espacios preferenciales no pueden exceder la cantidad de espacios totales.");
+                int ocupados = controller.getOccupancyCount(nameInDatabase);
+                if (total < ocupados) {
+                    throw new Exception("Capacidad insuficiente. Hay " + ocupados + " vehículos dentro.");
                 }
 
                 String originalName = (parkingToEdit != null) ? parkingToEdit.getName() : null;
-
                 controller.prepareTempParking(name, total, pref);
-
                 new SpaceConfigFrame(controller, currentUser, originalName).setVisible(true);
                 this.dispose();
 

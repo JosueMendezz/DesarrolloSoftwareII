@@ -13,7 +13,6 @@ public class LoginController {
     private final FileManager dataManager;
     private final LoginFrame view;
 
-    // Constructor que recibe ambos para inyectar dependencias
     public LoginController(LoginFrame view, FileManager dataManager) {
         this.view = view;
         this.dataManager = dataManager;
@@ -33,18 +32,14 @@ public class LoginController {
 
             JOptionPane.showMessageDialog(view, "Bienvenido " + user.getRole() + ": " + user.getUsername());
 
-            // Abrimos Dashboard pasando el dataManager (la llave)
             new Dashboard(user, dataManager);
-            view.dispose(); // Cerramos el login
+            view.dispose();
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(view, ex.getMessage(), "Error de Login", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    /**
-     * lógica de autenticación
-     */
     public User authenticate(String username, String password) throws IOException, Exception {
         validateInput(username, password);
 

@@ -2,10 +2,6 @@ package model.entities;
 
 import java.util.Arrays;
 
-/**
- * Entity representing a Parking Lot or a specific parking level. Stores the
- * layout and total capacity of parking spaces.
- */
 public class ParkingLot {
 
     private int id;
@@ -15,7 +11,6 @@ public class ParkingLot {
     private ParkingSpace[] spaces;
 
     public ParkingLot() {
-        // Inicializamos con valores por defecto para evitar NullPointerException
         this.spaces = new ParkingSpace[0];
     }
 
@@ -47,10 +42,6 @@ public class ParkingLot {
         return numberOfSpaces;
     }
 
-    /**
-     * Al cambiar el número de espacios, debemos redimensionar el arreglo para
-     * que el controlador tenga donde guardar los objetos ParkingSpace.
-     */
     public void setNumberOfSpaces(int numberOfSpaces) {
         this.numberOfSpaces = numberOfSpaces;
         this.spaces = new ParkingSpace[numberOfSpaces];

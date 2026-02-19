@@ -1,9 +1,5 @@
 package model.entities;
 
-/**
- * Entity representing the pricing structure for different vehicle types. Stores
- * rates for various time intervals (hourly, daily, weekly, monthly).
- */
 public class Tariff {
 
     private String vehicleType;

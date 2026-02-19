@@ -1,6 +1,2 @@
-305710082,Josue Mendez S,false
-304890587,Brayan estrada M,true
-605050275,Ericka Mariel Barrantes Durán,false
-1,Darío Mora,true
-2,Mauricio Nuñez,false
-78,Monica,true
+1,Brayan,true
+2,Ericka,false

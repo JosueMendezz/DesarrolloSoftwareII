@@ -1,20 +1,20 @@
 package model.entities;
 
-/**
- * Abstract base class for all system users. Provides core credentials and
- * enforces role identification.
- */
 public abstract class User {
 
     private String username;
     private String password;
+    private String fullName;
+    private String assignedParking;
 
     public User() {
     }
 
-    public User(String username, String password) {
+    public User(String username, String password, String fullName, String assignedParking) {
         this.username = username;
         this.password = password;
+        this.fullName = fullName;
+        this.assignedParking = assignedParking;
     }
 
     public String getUsername() {
@@ -33,9 +33,22 @@ public abstract class User {
         this.password = password;
     }
 
-    /**
-     * @return String representation of the user's specific role.
-     */
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getAssignedParking() {
+        return assignedParking;
+    }
+
+    public void setAssignedParking(String assignedParking) {
+        this.assignedParking = assignedParking;
+    }
+
     public abstract String getRole();
 
 }

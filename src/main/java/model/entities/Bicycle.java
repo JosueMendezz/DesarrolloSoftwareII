@@ -3,10 +3,7 @@ package model.entities;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Entity representing a Bicycle vehicle. Implements specific fee calculation
- * for bicycles.
- */
+
 public class Bicycle extends Vehicle {
 
     private static final double HOURLY_RATE = 500.0;

@@ -3,10 +3,7 @@ package model.entities;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Entity representing a Car vehicle. Implements specific fee calculation and
- * properties for cars.
- */
+
 public class Car extends Vehicle {
 
     private static final double HOURLY_RATE = 2000.0;

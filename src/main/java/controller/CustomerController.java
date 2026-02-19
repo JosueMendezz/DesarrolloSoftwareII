@@ -15,7 +15,6 @@ public class CustomerController {
 
     public void registerCustomer(String id, String name, boolean isPreferential) throws IOException {
         validateCustomerData(id, name);
-        // Cargamos datos actuales para verificar duplicados
         List<String[]> currentData = getAllCustomers();
         checkDuplicateId(id, currentData);
 
@@ -52,7 +51,6 @@ public class CustomerController {
     }
 
     public List<String[]> getAllCustomers() throws IOException {
-        // Le pedimos al modelo (FileManager) que nos de las líneas del archivo
         List<String> lines = fileManager.readAllCustomers();
         List<String[]> customerList = new ArrayList<>();
 
@@ -82,5 +80,15 @@ public class CustomerController {
 
     public FileManager getFileManager() {
         return this.fileManager;
+    }
+
+    public boolean existsById(String id) throws IOException {
+        List<String[]> customers = getAllCustomers();
+        for (String[] customer : customers) {
+            if (customer[0].trim().equals(id.trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

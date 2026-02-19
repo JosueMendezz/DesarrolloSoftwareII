@@ -3,10 +3,7 @@ package model.entities;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Entity representing a Heavy Vehicle (Trucks, Buses, etc.). Implements
- * specific fee calculation and weight properties.
- */
+
 public class HeavyVehicle extends Vehicle {
 
     private static final double HOURLY_RATE = 3000.0;

@@ -5,11 +5,6 @@ import model.entities.User;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * View for configuring individual space attributes (type and preferential
- * status). Operates on a block-allocation logic until the total capacity is
- * met.
- */
 public class SpaceConfigFrame extends JFrame {
 
     private final JLabel lblRemaining = new JLabel("Espacios Restantes: 0");
@@ -39,7 +34,7 @@ public class SpaceConfigFrame extends JFrame {
     }
 
     private void setupConfiguration() {
-        setTitle("J-Node - Space Allocation Config");
+        setTitle("J-Node - Configuración de asignación de espacios");
         setSize(500, 400);
         setLayout(new BorderLayout(15, 15));
         setLocationRelativeTo(null);
@@ -97,38 +92,47 @@ public class SpaceConfigFrame extends JFrame {
             String type = (String) comboVehicleType.getSelectedItem();
             boolean isPref = chkIsPreferential.isSelected();
 
+            int totalCap = controller.getTempParking().getNumberOfSpaces();
+            int remaining = controller.getRemainingSpaces();
+
+            int startRange = (totalCap - remaining) + 1;
+            int endRange = startRange + qty - 1;
+
+            if (oldName != null) {
+                controller.validateSpaceBlockIsFree(oldName, startRange, endRange, type, isPref);
+            }
+
             controller.configureSpaceBlock(qty, isPref, type);
 
             if (controller.isConfigFinished()) {
                 finalizeParkingSetup();
             } else {
-                JOptionPane.showMessageDialog(this, "Espacio(s) configurado(s). " + controller.getRemainingSpaces() + " Espacios Restantes.");
+                JOptionPane.showMessageDialog(this, "Bloque configurado con éxito.");
                 updateUI();
             }
+
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Configuration Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Integridad", JOptionPane.ERROR_MESSAGE);
             updateUI();
         }
     }
 
     private void finalizeParkingSetup() {
         try {
-            // We delegate the saving process to the controller
             controller.saveParkingConfiguration(oldName);
 
             JOptionPane.showMessageDialog(this, "Parqueo Creado Exitosamente");
-            // Return to management with an injected controller (Standard practice)
             new ParkingManagementFrame(currentUser, controller).setVisible(true);
             this.dispose();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Critical Save Error: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error critico al guardar: " + ex.getMessage());
         }
     }
 
     private void handleExit() {
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Desea salir de la ventana actual? Los cambios no se guardarán.",
-                "Confirm Exit", JOptionPane.YES_NO_OPTION);
+                "Confirmar salida", JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
             new ParkingManagementFrame(currentUser, controller).setVisible(true);
@@ -140,8 +144,8 @@ public class SpaceConfigFrame extends JFrame {
         int totalRemaining = controller.getRemainingSpaces();
         int prefMissing = controller.getPrefRemaining();
 
-        lblRemaining.setText("<html>Physical spaces left: <b>" + totalRemaining + "</b><br>"
-                + "Pending preferential quota: <b>" + prefMissing + "</b></html>");
+        lblRemaining.setText("<html>Espacios restantes: <b>" + totalRemaining + "</b><br>"
+                + "Espacios preferenciales restantes: <b>" + prefMissing + "</b></html>");
 
         updateQtyCombo(totalRemaining);
 
@@ -161,4 +165,5 @@ public class SpaceConfigFrame extends JFrame {
             comboQtyToConfig.addItem(i);
         }
     }
+
 }

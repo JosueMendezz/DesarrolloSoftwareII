@@ -74,6 +74,17 @@ public class ParkingController {
         prefSpacesAssigned = 0;
     }
 
+    public int getOccupancyCount(String parkingName) throws Exception {
+        List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
+        int count = 0;
+        for (String[] v : allVehicles) {
+            if (v.length > 10 && v[9].trim().equalsIgnoreCase(parkingName.trim())) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     private void updateParkingInList(String oldName) throws IOException {
         List<String> lines = fileManager.readAllParkingLines();
         List<String> updatedLines = new ArrayList<>();
@@ -96,7 +107,6 @@ public class ParkingController {
         }
 
         fileManager.saveParkingData(updatedLines);
-        // generamos el archivo de configuración detallada
         saveDetailedSpaceConfig();
     }
 
@@ -106,7 +116,6 @@ public class ParkingController {
 
         for (ParkingSpace space : tempParking.getSpaces()) {
             if (space != null) {
-                // Usamos los nombres de createSingleSpace
                 String line = String.format("%d|%s|%b",
                         space.getSpaceNumber(),
                         space.getVehicleTypesSupported(),
@@ -122,7 +131,18 @@ public class ParkingController {
                 tempParking.getNumberOfSpaces(), tempParking.getPreferentialSpaces());
     }
 
-    public void deleteParkingBranch(String name) throws IOException {
+    public void deleteParkingBranch(String name) throws Exception {
+        List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
+
+        long count = allVehicles.stream()
+                .filter(v -> v.length > 9 && v[9].trim().equalsIgnoreCase(name.trim()))
+                .count();
+
+        if (count > 0) {
+            throw new Exception("No se puede eliminar: El parqueo '" + name
+                    + "' tiene " + count + " vehículo(s) dentro actualmente.");
+        }
+
         List<String> lines = fileManager.readAllParkingLines();
         List<String> remaining = new ArrayList<>();
         for (String line : lines) {
@@ -134,7 +154,26 @@ public class ParkingController {
             }
         }
         fileManager.saveParkingData(remaining);
-        new java.io.File(name + "_config.txt").delete();
+
+        java.io.File configFile = new java.io.File(name + "_config.txt");
+        if (configFile.exists()) {
+            configFile.delete();
+        }
+    }
+
+    public void validateSpaceTypeChange(String parkingName, int startSpace, int endSpace) throws Exception {
+        List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
+
+        for (String[] v : allVehicles) {
+            if (v.length > 10 && v[9].trim().equalsIgnoreCase(parkingName.trim())) {
+                int spaceNumber = Integer.parseInt(v[10].trim());
+
+                if (spaceNumber >= startSpace && spaceNumber <= endSpace) {
+                    throw new Exception("No puede cambiar el tipo de los espacios " + startSpace + " al " + endSpace
+                            + " porque el espacio #" + spaceNumber + " está ocupado por un(a) " + v[1]);
+                }
+            }
+        }
     }
 
     public int getRemainingSpaces() {
@@ -166,5 +205,80 @@ public class ParkingController {
 
     public FileManager getFileManager() {
         return this.fileManager;
+    }
+
+    public int getOccupiedPreferentialCount(String parkingName) throws IOException {
+        List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
+        int count = 0;
+        for (String[] v : allVehicles) {
+            if (v.length > 10 && v[9].trim().equalsIgnoreCase(parkingName.trim())) {
+                if (v[6].trim().equalsIgnoreCase("true")) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    public List<String> getAllParkingLotNames() {
+        List<String> names = new ArrayList<>();
+        try {
+            List<String> data = fileManager.readAllParkingLines();
+
+            for (String line : data) {
+                if (!line.trim().isEmpty()) {
+                    names.add(line.split("\\|")[0]);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+        return names;
+    }
+
+    public void validateSpaceBlockIsFree(String parkingName, int start, int end, String newType, boolean newIsPref) throws Exception {
+        if (parkingName == null) {
+            return;
+        }
+
+        List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
+        for (String[] v : allVehicles) {
+            if (v.length > 10 && v[9].trim().equalsIgnoreCase(parkingName.trim())) {
+                try {
+                    int occupiedSpace = Integer.parseInt(v[10].trim());
+
+                    if (occupiedSpace >= start && occupiedSpace <= end) {
+                        String vehicleType = v[1].trim();
+                        boolean isVehiclePreferential = v[6].trim().equalsIgnoreCase("true");
+
+                        if (!vehicleType.equalsIgnoreCase(newType.trim())) {
+                            throw new Exception("El espacio #" + occupiedSpace + " está ocupado por un(a) " + vehicleType
+                                    + ". No puede cambiar el tipo de vehículo de este bloque.");
+                        }
+
+                        if (isVehiclePreferential && !newIsPref) {
+                            throw new Exception("¡BLOQUEO DE SEGURIDAD!\n"
+                                    + "El espacio #" + occupiedSpace + " está ocupado por un cliente con DISCAPACIDAD.\n"
+                                    + "No puede convertir este bloque en 'No Preferencial' mientras el vehículo esté dentro.");
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    continue;
+                }
+            }
+        }
+    }
+
+    public void validatePreferentialQuota(String parkingName, int newPrefQuota) throws Exception {
+        if (parkingName == null) {
+            return;
+        }
+
+        int occupiedPrefs = getOccupiedPreferentialCount(parkingName);
+
+        if (newPrefQuota < occupiedPrefs) {
+            throw new Exception("No puede reducir los espacios preferenciales a " + newPrefQuota
+                    + " porque actualmente hay " + occupiedPrefs + " vehículos preferenciales parqueados.");
+        }
     }
 }

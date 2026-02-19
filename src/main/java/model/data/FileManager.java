@@ -9,9 +9,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import model.entities.*;
 
-/**
- *
- */
 public class FileManager {
 
     private static final String USER_FILE = "users.txt";
@@ -38,7 +35,6 @@ public class FileManager {
         }
     }
 
-    // --- USER REPOSITORY ---
     public List<User> loadUsers() throws IOException {
         return Files.readAllLines(Paths.get(USER_FILE)).stream()
                 .map(this::parseUserLine)
@@ -48,25 +44,28 @@ public class FileManager {
 
     public void saveUsers(List<User> users) throws IOException {
         List<String> lines = users.stream()
-                .map(u -> u.getUsername() + "," + u.getPassword() + "," + u.getRole())
+                .map(u -> u.getUsername() + "," + u.getPassword() + "," + u.getRole() + "," + u.getFullName() + "," + u.getAssignedParking())
                 .collect(Collectors.toList());
-        Files.write(Paths.get(USER_FILE), lines, StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(Paths.get(USER_FILE), lines, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
     }
 
     private User parseUserLine(String line) {
         String[] parts = line.split(",");
-        if (parts.length < 3) {
+        if (parts.length < 5) {
             return null;
         }
 
         String username = parts[0].trim();
         String password = parts[1].trim();
         String role = parts[2].trim().toUpperCase();
+        String name = parts[3].trim();
+        String sede = parts[4].trim();
 
-        return role.equals("ADMIN") ? new Admin(username, password) : new Clerk(username, password);
+        return role.equals("ADMIN")
+                ? new Admin(username, password, name, sede)
+                : new Clerk(username, password, name, sede);
     }
 
-    // --- PARKING REPOSITORY ---
     public List<String> readAllParkingLines() throws IOException {
         return Files.readAllLines(Paths.get(PARKING_FILE));
     }
@@ -76,7 +75,6 @@ public class FileManager {
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-    // --- CUSTOMER REPOSITORY ---
     public List<String> readAllCustomerLines() throws IOException {
         return Files.readAllLines(Paths.get(CUSTOMER_FILE));
     }
@@ -86,9 +84,6 @@ public class FileManager {
                 StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
-    /**
-     * Helper to read raw lines from any file within the model.data context.
-     */
     public List<String> readRawLines(String fileName) throws IOException {
         Path path = Paths.get(fileName);
         return Files.exists(path) ? Files.readAllLines(path) : new ArrayList<>();
@@ -99,18 +94,12 @@ public class FileManager {
         appendCustomer(data);
     }
 
-    /**
-     * Loads all customers as a list of String arrays for table compatibility.
-     */
     public List<String[]> loadCustomersRaw() throws IOException {
         return readAllCustomerLines().stream()
                 .map(line -> line.split(","))
                 .collect(java.util.stream.Collectors.toList());
     }
 
-    /**
-     * Overwrites the customer file with updated data (used for delete/update).
-     */
     public void overwriteCustomers(List<String[]> data) throws IOException {
         List<String> lines = data.stream()
                 .map(row -> String.join(",", row))
@@ -156,13 +145,11 @@ public class FileManager {
         return records;
     }
 
-// Simula el estado de los espacios
     public Map<Integer, String> getParkingLayout(String parkingName) {
         Map<Integer, String> layout = new HashMap<>();
         return layout;
     }
 
-// Para getPreferentialSpaceIds
     public List<Integer> getPreferentialSpaceIds(String parkingName) {
         List<Integer> ids = new ArrayList<>();
         return ids;
@@ -187,11 +174,7 @@ public class FileManager {
         return lines;
     }
 
-    /**
-     * Guarda o actualiza la entrada de un vehículo en vehicles.txt
-     */
     public void saveVehicleEntry(String dataLine) throws IOException {
-        // Usamos StandardOpenOption 
         Files.write(Paths.get("vehicles.txt"),
                 (dataLine + System.lineSeparator()).getBytes(),
                 StandardOpenOption.CREATE,
@@ -204,20 +187,12 @@ public class FileManager {
 
         for (String line : lines) {
             if (!line.trim().isEmpty()) {
-                // Usamos "\\" para escapar el caracter especial "|"
                 data.add(line.split("\\|"));
             }
         }
         return data;
     }
 
-    /**
-     * Carga la configuración detallada de cada espacio de un parqueo
-     * específico.
-     *
-     * @return Una lista donde cada String[] contiene [numero, tipo,
-     * esPreferencial]
-     */
     public List<String[]> loadSpecificParkingConfig(String parkingName) throws IOException {
         String fileName = parkingName + "_config.txt";
         Path path = Paths.get(fileName);

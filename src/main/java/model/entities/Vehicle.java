@@ -4,10 +4,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Abstract base class representing a generic Vehicle. Provides shared
- * attributes and enforces fee calculation for subclasses.
- */
 public abstract class Vehicle {
 
     private String plate;
@@ -104,7 +100,6 @@ public abstract class Vehicle {
         }
         Duration duration = Duration.between(entryTime, exitTime);
         long hours = duration.toHours();
-        // Si pasó un minuto de la hora, se cobra la siguiente
         return (duration.toMinutes() % 60 > 0) ? hours + 1 : hours;
     }
 }

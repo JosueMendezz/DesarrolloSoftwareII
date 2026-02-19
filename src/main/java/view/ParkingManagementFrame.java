@@ -8,9 +8,6 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-/**
- * View for managing multiple parking lot branches.
- */
 public class ParkingManagementFrame extends JFrame {
 
     private JTable tblParkings;
@@ -31,7 +28,7 @@ public class ParkingManagementFrame extends JFrame {
     }
 
     private void setupConfiguration() {
-        setTitle("J-Node - Parking Management");
+        setTitle("J-Node - Administración de parqueos ");
         setSize(700, 450);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
@@ -91,18 +88,24 @@ public class ParkingManagementFrame extends JFrame {
         if (selectedRow != -1) {
             try {
                 String name = tableModel.getValueAt(selectedRow, 1).toString();
-                int total = Integer.parseInt(tableModel.getValueAt(selectedRow, 2).toString());
-                int pref = Integer.parseInt(tableModel.getValueAt(selectedRow, 3).toString());
+                int currentTotal = Integer.parseInt(tableModel.getValueAt(selectedRow, 2).toString());
+                int currentPref = Integer.parseInt(tableModel.getValueAt(selectedRow, 3).toString());
 
-                ParkingLot parking = new ParkingLot(0, name, total, pref);
+                int occupiedSpaces = controller.getOccupancyCount(name);
 
+                if (occupiedSpaces > 0) {
+                    JOptionPane.showMessageDialog(this,
+                            "<html>Este parqueo tiene <b>" + occupiedSpaces + " vehículos</b> estacionados.<br>"
+                            + "Al modificarlo, no podrá definir una capacidad menor a esa cantidad.</html>",
+                            "Información de Ocupación", JOptionPane.INFORMATION_MESSAGE);
+                }
+
+                ParkingLot parking = new ParkingLot(0, name, currentTotal, currentPref);
                 new ParkingCreateFrame(currentUser, controller, parking).setVisible(true);
                 this.dispose();
 
-            } catch (NumberFormatException nfe) {
-                showError("Invalid data format in table.");
             } catch (Exception ex) {
-                showError("Error loading branch data: " + ex.getMessage());
+                showError("Error cargando datos de la sede: " + ex.getMessage());
             }
         } else {
             showWarning("Seleccione el parqueo que va a modificar.");
@@ -111,23 +114,34 @@ public class ParkingManagementFrame extends JFrame {
 
     private void handleDelete() {
         int selectedRow = tblParkings.getSelectedRow();
+
         if (selectedRow != -1) {
             String name = tableModel.getValueAt(selectedRow, 1).toString();
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "Desea eliminar el parqueo " + name + "?",
-                    "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+
+            String mensaje = "<html>¿Está seguro de que desea eliminar el parqueo: <b>" + name + "</b>?<br>"
+                    + "<font color='red'>Esta acción eliminará todos los archivos de configuración asociados.</font></html>";
+
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    mensaje,
+                    "¡Advertencia de Eliminación!",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
                     controller.deleteParkingBranch(name);
+
                     refreshTableData();
-                    JOptionPane.showMessageDialog(this, "Parqueo eliminado exitosamente.");
+                    JOptionPane.showMessageDialog(this, "El parqueo '" + name + "' ha sido removido del sistema.",
+                            "Operación Exitosa", JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception ex) {
-                    showError("Error deleting branch: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(this, ex.getMessage(), "No se pudo eliminar", JOptionPane.ERROR_MESSAGE);
                 }
             }
         } else {
-            showWarning("Seleccione el parqueo que desea eliminar.");
+            JOptionPane.showMessageDialog(this, "Debe seleccionar un parqueo de la lista para poder eliminarlo.",
+                    "Selección Requerida", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -141,23 +155,23 @@ public class ParkingManagementFrame extends JFrame {
                 if (row != null && row.length >= 3) {
                     Object[] tableRow = {
                         idCounter++,
-                        row[0], // Nombre
-                        row[1], // Total
-                        row[2] // Preferencial
+                        row[0],
+                        row[1],
+                        row[2]
                     };
                     tableModel.addRow(tableRow);
                 }
             }
         } catch (Exception e) {
-            showError("Critical error loading table: " + e.getMessage());
+            showError("Error critico al cargar la tabla: " + e.getMessage());
         }
     }
 
     private void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, "System Error", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, "Error del sistema", JOptionPane.ERROR_MESSAGE);
     }
 
     private void showWarning(String message) {
-        JOptionPane.showMessageDialog(this, message, "Warning", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, "Cuidado", JOptionPane.WARNING_MESSAGE);
     }
 }

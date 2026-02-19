@@ -1,9 +1,5 @@
 package model.entities;
 
-/**
- * Entity representing a Customer in the system. Stores personal identification
- * and accessibility requirements.
- */
 public class Customer {
 
     private String id;

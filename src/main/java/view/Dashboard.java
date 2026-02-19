@@ -2,7 +2,7 @@ package view;
 
 import controller.CustomerController;
 import controller.ParkingController;
-import controller.VehicleController; // Asegúrate de importar esto
+import controller.VehicleController;
 import model.data.FileManager;
 import model.entities.User;
 import javax.swing.*;
@@ -42,19 +42,17 @@ public class Dashboard extends JFrame {
     private void setupTabs() {
         tabbedPane = new JTabbedPane();
 
-        // 1. Transparencia total del contenedor de pestañas
+        controller.VehicleController vehicleController = new controller.VehicleController(fileManager);
+
         tabbedPane.setBackground(new Color(45, 45, 45, 200));
         tabbedPane.setOpaque(false);
 
-        // --- PESTAÑA 1: BIENVENIDA ---
         JPanel welcomePanel = new JPanel(new GridBagLayout());
-        welcomePanel.setOpaque(false); // <--- Clave para ver el BackgroundPanel
+        welcomePanel.setOpaque(false);
 
-        // Contenedor del mensaje (el recuadro "ahumado")
         JPanel textContainer = new JPanel();
-        textContainer.setBackground(new Color(0, 0, 0, 180)); // Negro semi-transparente
+        textContainer.setBackground(new Color(0, 0, 0, 180));
         textContainer.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
-        // IMPORTANTE: Para que el color con transparencia funcione, setOpaque debe ser true
         textContainer.setOpaque(true);
 
         String role = currentUser.getRole().toLowerCase();
@@ -65,26 +63,21 @@ public class Dashboard extends JFrame {
         textContainer.add(lblWelcome);
         welcomePanel.add(textContainer);
 
-        // --- PESTAÑA 2: MONITOR DE ESTADO ---
-        VehicleController vehicleController = new VehicleController(fileManager);
-        ParkingMonitorView monitorTab = new ParkingMonitorView(vehicleController);
-        monitorTab.setOpaque(true); // Se mantiene opaco para legibilidad de la tabla
+        ParkingMonitorView monitorTab = new ParkingMonitorView(vehicleController, currentUser);
+        monitorTab.setOpaque(true);
 
-        // Añadimos las pestañas
         tabbedPane.addTab("Inicio", welcomePanel);
         tabbedPane.addTab("Parqueos", monitorTab);
-        customizeTabTitles();
-        getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
-        // 2. AJUSTE DE UI: Algunos "Look and Feel" pintan un panel opaco debajo de las pestañas
-        // Recorremos los componentes internos del tabbedPane para asegurar transparencia en la pestaña 0
+        customizeTabTitles();
+
         tabbedPane.setUI(new javax.swing.plaf.basic.BasicTabbedPaneUI() {
             @Override
             protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
+
             }
         });
 
-        // Añadimos el tabbedPane al Dashboard
         getContentPane().add(tabbedPane, BorderLayout.CENTER);
     }
 
@@ -92,13 +85,11 @@ public class Dashboard extends JFrame {
         JMenuBar menuBar = new JMenuBar();
         menuBar.setBackground(new Color(20, 20, 20));
 
-        // --- System Menu ---
         JMenu systemMenu = createMenu("Sistema");
         JMenuItem logoutItem = new JMenuItem("Cerrar Sesión");
         logoutItem.addActionListener(e -> handleLogout());
         systemMenu.add(logoutItem);
 
-        // --- Operations Menu ---
         JMenu operationsMenu = createMenu("Operaciones");
 
         JMenuItem customerItem = new JMenuItem("Gestión de Clientes");
@@ -150,7 +141,9 @@ public class Dashboard extends JFrame {
 
     private void openCustomerManagement() {
         CustomerController custController = new CustomerController(fileManager);
-        new CustomerFrame(currentUser, custController).setVisible(true);
+
+        CustomerFrame frame = new CustomerFrame(currentUser, custController);
+        frame.setVisible(true);
         this.dispose();
     }
 
@@ -177,14 +170,15 @@ public class Dashboard extends JFrame {
     private void openVehicleCheckIn() {
         try {
             controller.VehicleController vehicleController = new controller.VehicleController(fileManager);
-            new view.VehicleCheckInFrame(currentUser, vehicleController).setVisible(true);
+            view.VehicleCheckInFrame checkIn = new view.VehicleCheckInFrame(currentUser, vehicleController);
+
+            checkIn.setVisible(true);
             this.dispose();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error al abrir Ingreso: " + ex.getMessage());
         }
     }
 
-    // Panel interno para el fondo
     class BackgroundPanel extends JPanel {
 
         private Image img;
@@ -208,15 +202,12 @@ public class Dashboard extends JFrame {
 
     private void customizeTabTitles() {
         for (int i = 0; i < tabbedPane.getTabCount(); i++) {
-            // Creamos un JLabel para el título
             JLabel lbl = new JLabel(tabbedPane.getTitleAt(i));
             lbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
             lbl.setForeground(Color.WHITE);
 
-            // Le damos un margen interno para que no se vea apretado
             lbl.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 
-            // Lo aplicamos a la pestaña
             tabbedPane.setTabComponentAt(i, lbl);
         }
     }

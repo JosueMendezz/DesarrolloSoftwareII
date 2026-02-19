@@ -1,0 +1,3 @@
+1|Automóvil|true
+2|Automóvil|false
+3|Vehículo Pesado|true

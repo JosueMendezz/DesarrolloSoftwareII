@@ -9,10 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import model.entities.User;
 
-/**
- * View for Customer Management. Implements clean separation: no business logic,
- * only UI events and error display.
- */
 public class CustomerFrame extends JFrame {
 
     private final JTextField txtId = new JTextField(15);
@@ -21,7 +17,7 @@ public class CustomerFrame extends JFrame {
     private final JButton registerButton = new JButton("Registrar");
     private final JButton updateButton = new JButton("Modificar");
     private final JButton deleteButton = new JButton("Eliminar");
-    private final JButton btnExit = new JButton("Salir");
+    private final JButton btnExit = new JButton("Volver");
 
     private JTable customerTable;
     private DefaultTableModel tableModel;
@@ -37,6 +33,7 @@ public class CustomerFrame extends JFrame {
         setupComponents();
         setupListeners();
         initialDataLoad();
+        this.getRootPane().setDefaultButton(registerButton);
     }
 
     private void setupConfiguration() {
@@ -48,7 +45,6 @@ public class CustomerFrame extends JFrame {
     }
 
     private void setupComponents() {
-        // Form Panel
         JPanel formPanel = new JPanel(new GridLayout(5, 1, 5, 5));
         formPanel.setBorder(BorderFactory.createTitledBorder("Credenciales del cliente"));
         formPanel.add(new JLabel("ID:"));
@@ -57,7 +53,6 @@ public class CustomerFrame extends JFrame {
         formPanel.add(txtName);
         formPanel.add(chkPreferential);
 
-        // Buttons Panel
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.add(registerButton);
         buttonPanel.add(updateButton);
@@ -69,7 +64,6 @@ public class CustomerFrame extends JFrame {
         topContainer.add(buttonPanel, BorderLayout.SOUTH);
         add(topContainer, BorderLayout.NORTH);
 
-        // Table setup
         String[] columns = {"ID", "Nombre", "Preferencial"};
         tableModel = new DefaultTableModel(columns, 0);
         customerTable = new JTable(tableModel);
@@ -80,13 +74,20 @@ public class CustomerFrame extends JFrame {
         registerButton.addActionListener(e -> handleRegistration());
         updateButton.addActionListener(e -> handleUpdate());
         deleteButton.addActionListener(e -> handleDelete());
-        btnExit.addActionListener(e -> {
+
+        btnExit.addActionListener(e -> handleBack());
+
+        customerTable.getSelectionModel().addListSelectionListener(e -> fillFieldsFromSelectedRow());
+    }
+
+    private void handleBack() {
+        if (customerTable.getSelectedRow() != -1) {
+            customerTable.clearSelection();
+            clearFields();
+        } else {
             this.dispose();
             new Dashboard(currentUser, controller.getFileManager()).setVisible(true);
-        });
-
-        // Selection listener to fill fields when a row is clicked
-        customerTable.getSelectionModel().addListSelectionListener(e -> fillFieldsFromSelectedRow());
+        }
     }
 
     private void handleRegistration() {
@@ -124,15 +125,31 @@ public class CustomerFrame extends JFrame {
     }
 
     private void handleDelete() {
-        try {
-            int selectedRow = customerTable.getSelectedRow();
-            controller.removeCustomer(selectedRow, getTableDataList());
+        int selectedRow = customerTable.getSelectedRow();
 
-            refreshTable();
-            clearFields();
-            JOptionPane.showMessageDialog(this, "Cliente eliminado de la base de datos.");
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un cliente de la tabla.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "¿Está seguro de que desea eliminar a este cliente? Esta acción no se puede deshacer.",
+                "Confirmar eliminación",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                controller.removeCustomer(selectedRow, getTableDataList());
+
+                refreshTable();
+                clearFields();
+                JOptionPane.showMessageDialog(this, "Cliente eliminado de la base de datos.");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -140,7 +157,7 @@ public class CustomerFrame extends JFrame {
         try {
             refreshTable();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Initial load failed: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "La carga inicial falló " + e.getMessage());
         }
     }
 
@@ -148,16 +165,11 @@ public class CustomerFrame extends JFrame {
         tableModel.setRowCount(0);
         List<String[]> data = controller.getAllCustomers();
         for (String[] row : data) {
-            // UI translation of data: "true" -> "Yes"
             String prefLabel = row[2].equalsIgnoreCase("true") ? "Si" : "No";
             tableModel.addRow(new Object[]{row[0], row[1], prefLabel});
         }
     }
 
-    /**
-     * Helper to extract current table state into a pure List for the
-     * Controller. Used for update/delete synchronization.
-     */
     private List<String[]> getTableDataList() {
         List<String[]> data = new ArrayList<>();
         for (int i = 0; i < tableModel.getRowCount(); i++) {
@@ -175,7 +187,7 @@ public class CustomerFrame extends JFrame {
             txtId.setText(tableModel.getValueAt(row, 0).toString());
             txtName.setText(tableModel.getValueAt(row, 1).toString());
             chkPreferential.setSelected(tableModel.getValueAt(row, 2).toString().equals("Si"));
-            txtId.setEditable(false); // ID should not be changed during update
+            txtId.setEditable(false); // 
         }
     }
 
