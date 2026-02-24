@@ -14,25 +14,78 @@ public class FileManager {
     private static final String USER_FILE = "users.txt";
     private static final String PARKING_FILE = "parkings.txt";
     private static final String CUSTOMER_FILE = "customers.txt";
+    private static final String VEHICLE_FILE = "vehicles.txt";
+    private static final String RATES_FILE = "rates.txt";
+    private static final String HISTORY_FILE = "history.txt";
 
     public FileManager() {
         ensureFilesExist();
     }
 
     private void ensureFilesExist() {
-        try {
-            if (!Files.exists(Paths.get(USER_FILE))) {
-                Files.createFile(Paths.get(USER_FILE));
+        String[] essentialFiles = {
+            USER_FILE, PARKING_FILE, CUSTOMER_FILE,
+            VEHICLE_FILE, RATES_FILE, HISTORY_FILE
+        };
+
+        for (String fileName : essentialFiles) {
+            try {
+                Path path = Paths.get(fileName);
+                if (!Files.exists(path)) {
+                    Files.createFile(path);
+                    // Inicializar tarifas por defecto si el archivo es nuevo
+                    if (fileName.equals(RATES_FILE)) {
+                        initDefaultRates();
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("Error inicializando: " + fileName + " -> " + e.getMessage());
             }
-            if (!Files.exists(Paths.get(PARKING_FILE))) {
-                Files.createFile(Paths.get(PARKING_FILE));
-            }
-            if (!Files.exists(Paths.get(CUSTOMER_FILE))) {
-                Files.createFile(Paths.get(CUSTOMER_FILE));
+        }
+    }
+
+    private void initDefaultRates() throws IOException {
+        List<String> defaultRates = List.of(
+                "Automóvil|1000",
+                "Motocicleta|500",
+                "Bicicleta|200",
+                "Vehículo Pesado|2000"
+        );
+        Files.write(Paths.get(RATES_FILE), defaultRates);
+    }
+
+    public List<String> readLinesFromFile(String fileName) {
+        List<String> lines = new ArrayList<>();
+        Path path = Paths.get(fileName);
+        if (!Files.exists(path)) {
+            return lines;
+        }
+
+        // Usar un BufferedReader con un FileReader garantiza que leamos el estado físico actual
+        try (BufferedReader br = new BufferedReader(new FileReader(path.toFile()))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    lines.add(line);
+                }
             }
         } catch (IOException e) {
-            System.err.println("Critical Error: Could not initialize data files: " + e.getMessage());
+            System.err.println("Error de lectura crítica: " + e.getMessage());
         }
+        return lines;
+    }
+
+    public void appendToFile(String fileName, String data) throws IOException {
+        Files.write(Paths.get(fileName),
+                (data + System.lineSeparator()).getBytes(),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND);
+    }
+
+    public void updateRates(List<String> newRates) throws IOException {
+        // Esto sobreescribe el rates.txt con los nuevos valores del Admin
+        Files.write(Paths.get("rates.txt"), newRates,
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     public List<User> loadUsers() throws IOException {
@@ -214,5 +267,14 @@ public class FileManager {
                 out.println(line);
             }
         }
+    }
+
+    public String getCustomerNameById(String id) {
+        return readLinesFromFile("customers.txt").stream()
+                .map(line -> line.split(","))
+                .filter(data -> data.length > 1 && data[0].trim().equals(id.trim()))
+                .map(data -> data[1].trim())
+                .findFirst()
+                .orElse("Desconocido (" + id + ")");
     }
 }

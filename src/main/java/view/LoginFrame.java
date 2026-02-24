@@ -5,7 +5,7 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-public class LoginFrame extends JFrame {
+public class LoginFrame extends BaseFrame {
 
     private final JTextField txtUsername;
     private final JPasswordField txtPassword;
@@ -13,57 +13,104 @@ public class LoginFrame extends JFrame {
     private final JButton btnExit;
 
     public LoginFrame() {
-        setTitle("J-Node Parking System - Acceso");
-        setSize(400, 380);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        super("Heap Haven - Control de Acceso", 420, 450);
 
+        getContentPane().setLayout(new BorderLayout());
+
+        // 1. Barra de título personalizada (Heredada)
+        this.setupCustomTitleBar("SISTEMA DE GESTIÓN J-NODE");
+
+        // 2. Panel Principal con el fondo de BaseFrame
         JPanel mainPanel = new JPanel(new GridBagLayout());
-        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        mainPanel.setOpaque(false);
+        mainPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(8, 5, 8, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
+        // 3. Logo o Título Superior
         gbc.gridx = 0;
         gbc.gridy = 0;
-        mainPanel.add(new JLabel("Usuario:"), gbc);
+        gbc.gridwidth = 2;
+        JLabel lblLogo = createHeaderLabel("BIENVENIDO");
+        lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
+        lblLogo.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+        mainPanel.add(lblLogo, gbc);
+
+        // 4. Campos de Texto
+        gbc.gridwidth = 1;
+
+        // Usuario
+        gbc.gridy = 1;
+        gbc.gridx = 0;
+        mainPanel.add(createLabel("USUARIO:"), gbc);
 
         gbc.gridx = 1;
-        txtUsername = new JTextField(15);
+        txtUsername = createStyledTextField();
         mainPanel.add(txtUsername, gbc);
 
+        // Contraseña
+        gbc.gridy = 2;
         gbc.gridx = 0;
-        gbc.gridy = 1;
-        mainPanel.add(new JLabel("Contraseña:"), gbc);
+        mainPanel.add(createLabel("CONTRASEÑA:"), gbc);
 
         gbc.gridx = 1;
-        txtPassword = new JPasswordField(15);
+        txtPassword = createStyledPasswordField();
         mainPanel.add(txtPassword, gbc);
 
+        // 5. Botones usando los métodos de BaseFrame
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         gbc.gridwidth = 2;
-        btnLogin = new JButton("Ingresar");
-        btnLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnLogin.setFont(new Font("Arial", Font.BOLD, 14));
-        btnLogin.setBackground(new Color(40, 167, 69));
-        btnLogin.setForeground(Color.WHITE);
+        gbc.insets = new Insets(25, 5, 10, 5);
+
+        // Botón Ingresar (Resaltado en Celeste)
+        btnLogin = createStyledButton("Ingresar al Sistema", true);
         mainPanel.add(btnLogin, gbc);
 
-        gbc.gridy = 3;
-        btnExit = new JButton("Cerrar Aplicación");
-        btnExit.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnExit.setFont(new Font("Arial", Font.PLAIN, 12));
-        btnExit.setBackground(new Color(220, 53, 69));
-        btnExit.setForeground(Color.WHITE);
-
+        // Botón Salir (Gris Mate)
+        gbc.gridy = 4;
+        gbc.insets = new Insets(0, 5, 10, 5);
+        btnExit = createStyledButton("Cerrar Aplicación", false);
         btnExit.addActionListener(e -> handleExit());
-
         mainPanel.add(btnExit, gbc);
 
-        this.getRootPane().setDefaultButton(btnLogin);
+        getContentPane().add(mainPanel, BorderLayout.CENTER);
 
-        add(mainPanel);
+        this.getRootPane().setDefaultButton(btnLogin);
+        setVisible(true);
+    }
+
+    // --- MÉTODOS AUXILIARES PARA MANTENER LA ESTÉTICA ---
+    private JLabel createLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setForeground(COLOR_TEXTO);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        return lbl;
+    }
+
+    private JTextField createStyledTextField() {
+        JTextField tf = new JTextField(15);
+        styleInput(tf);
+        return tf;
+    }
+
+    private JPasswordField createStyledPasswordField() {
+        JPasswordField pf = new JPasswordField(15);
+        styleInput(pf);
+        return pf;
+    }
+
+    private void styleInput(JTextField input) {
+        input.setBackground(new Color(40, 40, 40));
+        input.setForeground(Color.WHITE);
+        input.setCaretColor(COLOR_CELESTE);
+        input.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        input.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(60, 60, 60)),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
     }
 
     private void handleExit() {

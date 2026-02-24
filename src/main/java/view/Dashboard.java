@@ -2,128 +2,179 @@ package view;
 
 import controller.CustomerController;
 import controller.ParkingController;
-import controller.VehicleController;
 import model.data.FileManager;
 import model.entities.User;
 import javax.swing.*;
 import java.awt.*;
+import model.services.LocalReportService;
 
-public class Dashboard extends JFrame {
+public class Dashboard extends BaseFrame {
 
     private final User currentUser;
     private final FileManager fileManager;
     private JTabbedPane tabbedPane;
+    private BackgroundPanel mainBackground;
 
     public Dashboard(User currentUser, FileManager fileManager) {
+        super("Heap Haven - Menú Principal", 1100, 700);
         this.currentUser = currentUser;
         this.fileManager = fileManager;
 
-        setupConfiguration();
+        getContentPane().setLayout(new BorderLayout());
+
+        // 1. PANEL SUPERIOR (Barra Título + Menú)
+        JPanel headerContainer = new JPanel(new BorderLayout());
+        headerContainer.setBackground(COLOR_BARRA_TITULO);
+
+        // Barra de título
+        this.setupCustomTitleBar("HEAP HAVEN PARKING SYSTEM - " + currentUser.getRole());
+
+        Component titleBar = ((BorderLayout) getContentPane().getLayout()).getLayoutComponent(BorderLayout.NORTH);
+        if (titleBar != null) {
+            headerContainer.add(titleBar, BorderLayout.NORTH);
+        }
+
+        // Menú de navegación justo debajo
+        setupMenuBarAsComponent(headerContainer);
+        getContentPane().add(headerContainer, BorderLayout.NORTH);
+
+        // 2. CONTENIDO CENTRAL
         setupBackground();
         setupTabs();
-        setupMenuBar();
+        setupFloatingWelcome();
 
         setVisible(true);
     }
 
-    private void setupConfiguration() {
-        setTitle("J-Node Parking System - Main Menu");
-        setSize(1100, 700); // Un poco más grande para la tabla
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-    }
-
     private void setupBackground() {
-        BackgroundPanel background = new BackgroundPanel("background.jpg");
-        background.setLayout(new BorderLayout());
-        setContentPane(background);
+        mainBackground = new BackgroundPanel("HH_RTX.png");
+        mainBackground.setLayout(null);
+        getContentPane().add(mainBackground, BorderLayout.CENTER);
     }
 
     private void setupTabs() {
         tabbedPane = new JTabbedPane();
-
         controller.VehicleController vehicleController = new controller.VehicleController(fileManager);
 
-        tabbedPane.setBackground(new Color(45, 45, 45, 200));
+        // --- ESTILO DE PESTAÑAS ---
         tabbedPane.setOpaque(false);
+        tabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
-        JPanel welcomePanel = new JPanel(new GridBagLayout());
-        welcomePanel.setOpaque(false);
-
-        JPanel textContainer = new JPanel();
-        textContainer.setBackground(new Color(0, 0, 0, 180));
-        textContainer.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
-        textContainer.setOpaque(true);
-
-        String role = currentUser.getRole().toLowerCase();
-        JLabel lblWelcome = new JLabel("Bienvenido " + role + ": " + currentUser.getUsername());
-        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 36));
-        lblWelcome.setForeground(Color.WHITE);
-
-        textContainer.add(lblWelcome);
-        welcomePanel.add(textContainer);
-
-        ParkingMonitorView monitorTab = new ParkingMonitorView(vehicleController, currentUser);
-        monitorTab.setOpaque(true);
-
-        tabbedPane.addTab("Inicio", welcomePanel);
-        tabbedPane.addTab("Parqueos", monitorTab);
-
-        customizeTabTitles();
-
+        // Eliminamos el UI básico para que no dibuje bordes grises
         tabbedPane.setUI(new javax.swing.plaf.basic.BasicTabbedPaneUI() {
             @Override
             protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
+            }
 
+            @Override
+            protected void paintTabBorder(Graphics g, int tabPlacement, int tabIndex, int x, int y, int w, int h, boolean isSelected) {
+            }
+
+            @Override
+            protected void paintTabBackground(Graphics g, int tabPlacement, int tabIndex, int x, int y, int w, int h, boolean isSelected) {
+                if (isSelected) {
+                    Graphics2D g2 = (Graphics2D) g;
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(new Color(33, 150, 243, 40));
+                    g2.fillRect(x, y, w, h);
+                    g2.setColor(COLOR_CELESTE);
+                    g2.fillRect(x, y + h - 3, w, 3);
+                }
             }
         });
 
-        getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        // Paneles de las pestañas
+        JPanel welcomePanel = new JPanel();
+        welcomePanel.setOpaque(false);
+
+        ParkingMonitorView monitorTab = new ParkingMonitorView(vehicleController, currentUser);
+        monitorTab.setOpaque(false);
+
+        tabbedPane.addTab("INICIO", welcomePanel);
+        tabbedPane.addTab("MONITOR DE PARQUEOS", monitorTab);
+
+        tabbedPane.setBounds(20, 20, 1060, 500);
+
+        customizeTabTitles();
+        mainBackground.add(tabbedPane);
     }
 
-    private void setupMenuBar() {
+    private void setupMenuBarAsComponent(JPanel container) {
         JMenuBar menuBar = new JMenuBar();
-        menuBar.setBackground(new Color(20, 20, 20));
+        menuBar.setBackground(COLOR_BARRA_TITULO);
+        menuBar.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 5));
+        menuBar.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(50, 50, 50)));
 
-        JMenu systemMenu = createMenu("Sistema");
-        JMenuItem logoutItem = new JMenuItem("Cerrar Sesión");
+        // Estilo  para los menús
+        JMenu systemMenu = createMenu("SISTEMA");
+        JMenu operationsMenu = createMenu("OPERACIONES");
+
+        // --- SISTEMA ---
+        JMenuItem logoutItem = createMenuItem("Cerrar Sesión");
         logoutItem.addActionListener(e -> handleLogout());
         systemMenu.add(logoutItem);
 
-        JMenu operationsMenu = createMenu("Operaciones");
+        // --- OPERACIONES ---
+        operationsMenu.add(createMenuItem("Gestión de Clientes")).addActionListener(e -> openCustomerManagement());
+        operationsMenu.add(createMenuItem("Ingreso de Vehículos")).addActionListener(e -> openVehicleCheckIn());
 
-        JMenuItem customerItem = new JMenuItem("Gestión de Clientes");
-        customerItem.addActionListener(e -> openCustomerManagement());
-        operationsMenu.add(customerItem);
+        // --- REPORTE LOCAL ---
+        JMenuItem reportItem = createMenuItem("Generar Reporte de Sede");
+        reportItem.addActionListener(e -> {
+            ReportSelectionDialog dialog = new ReportSelectionDialog(this, currentUser, fileManager);
+            dialog.setVisible(true);
 
-        JMenuItem vehicleItem = new JMenuItem("Ingreso de Vehículos");
-        vehicleItem.addActionListener(e -> openVehicleCheckIn());
-        operationsMenu.add(vehicleItem);
+            if (dialog.isConfirmed()) {
+                try {
+                    String sedeElegida = dialog.getSelectedSede();
+                    LocalReportService reportService = new LocalReportService(fileManager);
+
+                    reportService.generateLocalPDF(sedeElegida, currentUser);
+
+                    JOptionPane.showMessageDialog(this,
+                            "Reporte generado con éxito para: " + sedeElegida,
+                            "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        operationsMenu.add(reportItem);
 
         if (currentUser.getRole().equalsIgnoreCase("ADMIN")) {
-            JMenuItem parkingItem = new JMenuItem("Gestión de Parqueos");
-            parkingItem.addActionListener(e -> openParkingManagement());
-            operationsMenu.add(parkingItem);
-        }
+            operationsMenu.add(createMenuItem("Gestión de Sedes")).addActionListener(e -> openParkingManagement());
 
-        menuBar.add(systemMenu);
-        menuBar.add(operationsMenu);
-
-        if (currentUser.getRole().equalsIgnoreCase("ADMIN")) {
-            JMenu adminMenu = createMenu("Administración");
-            JMenuItem userMgmtItem = new JMenuItem("Gestión de Usuarios");
-            userMgmtItem.addActionListener(e -> openUserManagement());
-            adminMenu.add(userMgmtItem);
+            JMenu adminMenu = createMenu("ADMINISTRACIÓN");
+            adminMenu.add(createMenuItem("Gestión de Usuarios")).addActionListener(e -> openUserManagement());
+            adminMenu.add(createMenuItem("Gestión de Tarifas")).addActionListener(e -> {
+                new RateManagementView(this, new controller.VehicleController(fileManager), this::refreshMonitorData).setVisible(true);
+            });
+            menuBar.add(systemMenu);
+            menuBar.add(operationsMenu);
             menuBar.add(adminMenu);
+        } else {
+            menuBar.add(systemMenu);
+            menuBar.add(operationsMenu);
         }
 
-        setJMenuBar(menuBar);
+        container.add(menuBar, BorderLayout.SOUTH);
     }
 
     private JMenu createMenu(String title) {
         JMenu menu = new JMenu(title);
-        menu.setForeground(Color.WHITE);
+        menu.setForeground(COLOR_CELESTE);
+        menu.setFont(new Font("Segoe UI", Font.BOLD, 12));
         return menu;
+    }
+
+    private JMenuItem createMenuItem(String text) {
+        JMenuItem item = new JMenuItem(text);
+        item.setBackground(COLOR_BARRA_TITULO);
+        item.setForeground(Color.WHITE);
+        item.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        item.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        return item;
     }
 
     private void handleLogout() {
@@ -149,9 +200,13 @@ public class Dashboard extends JFrame {
 
     private void openParkingManagement() {
         if (currentUser.getRole().equalsIgnoreCase("ADMIN")) {
-            ParkingController parkController = new ParkingController(fileManager);
-            new ParkingManagementFrame(currentUser, parkController).setVisible(true);
-            this.dispose();
+            try {
+                ParkingController parkController = new ParkingController(fileManager);
+                new ParkingManagementFrame(currentUser, parkController).setVisible(true);
+                this.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "No se pudo abrir la gestión de parqueos: " + ex.getMessage());
+            }
         }
     }
 
@@ -203,12 +258,37 @@ public class Dashboard extends JFrame {
     private void customizeTabTitles() {
         for (int i = 0; i < tabbedPane.getTabCount(); i++) {
             JLabel lbl = new JLabel(tabbedPane.getTitleAt(i));
-            lbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
             lbl.setForeground(Color.WHITE);
-
-            lbl.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-
+            lbl.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 20));
             tabbedPane.setTabComponentAt(i, lbl);
+        }
+    }
+
+    private void setupFloatingWelcome() {
+        JLabel lblWelcome = new JLabel();
+        String role = currentUser.getRole().toUpperCase();
+        String user = currentUser.getUsername().toUpperCase();
+        String hexCeleste = String.format("#%02x%02x%02x", COLOR_CELESTE.getRed(), COLOR_CELESTE.getGreen(), COLOR_CELESTE.getBlue());
+        lblWelcome.setText("<html><div style='text-align: center; font-family: Segoe UI;'>"
+                + "<span style='font-size: 9pt; color: white; letter-spacing: 5px;'>SISTEMA CENTRAL DE OPERACIONES</span><br>"
+                + "<span style='font-size: 16pt; color: white;'>USUARIO ACTIVO: </span>"
+                + "<b style='font-size: 16pt; color: " + hexCeleste + ";'>" + role + " - " + user + "</b>"
+                + "</div></html>");
+
+        lblWelcome.setHorizontalAlignment(SwingConstants.CENTER);
+        lblWelcome.setBounds(0, 540, 1100, 80);
+        mainBackground.add(lblWelcome);
+    }
+
+    public void refreshMonitorData() {
+        // Buscamos la pestaña del monitor dentro del tabbedPane
+        for (Component comp : tabbedPane.getComponents()) {
+            if (comp instanceof ParkingMonitorView) {
+                // Ejecutamos el método que ya tienes creado
+                ((ParkingMonitorView) comp).refreshTableData();
+                break;
+            }
         }
     }
 }

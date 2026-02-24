@@ -8,18 +8,20 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import model.entities.User;
 import java.util.List;
+import javax.swing.border.TitledBorder;
 
+public class UserManagementFrame extends BaseFrame {
 
-public class UserManagementFrame extends JFrame {
+    private final JTextField txtUser;
+    private final JPasswordField txtPass;
+    private final JTextField txtFullName;
+    private final JComboBox<String> comboRole;
+    private final JComboBox<String> comboSede;
 
-    private final JTextField txtUser = new JTextField(15);
-    private final JPasswordField txtPass = new JPasswordField(15);
-    private final JComboBox<String> comboRole = new JComboBox<>(new String[]{"ADMIN", "OPERATOR"});
-
-    private final JButton btnAdd = new JButton("Registrar");
-    private final JButton btnUpdate = new JButton("Modificar");
-    private final JButton btnDelete = new JButton("Eliminar");
-    private final JButton btnBack = new JButton("Volver");
+    private final JButton btnAdd;
+    private final JButton btnUpdate;
+    private final JButton btnDelete;
+    private final JButton btnBack;
 
     private JTable userTable;
     private DefaultTableModel tableModel;
@@ -27,14 +29,33 @@ public class UserManagementFrame extends JFrame {
     private final User currentUser;
     private final UserController controller;
 
-    private final JTextField txtFullName = new JTextField(15);
-    private final JComboBox<String> comboSede = new JComboBox<>();
+    private JButton btnShowPass;
+    private boolean isPassVisible = false;
 
     public UserManagementFrame(User user, UserController controller) {
+        super("Heap Haven - Administración de Seguridad", 850, 650);
         this.currentUser = user;
         this.controller = controller;
 
-        setupConfiguration();
+        // 1. Inicializar Componentes con Estilo
+        txtUser = createStyledTextField();
+        txtPass = createStyledPasswordField();
+        txtFullName = createStyledTextField();
+
+        comboRole = new JComboBox<>(new String[]{"ADMIN", "OPERATOR"});
+        comboSede = new JComboBox<>();
+        styleComboBox(comboRole);
+        styleComboBox(comboSede);
+
+        btnAdd = createStyledButton("Registrar", true);
+        btnUpdate = createStyledButton("Modificar", false);
+        btnDelete = createStyledButton("Eliminar", false);
+        btnBack = createStyledButton("Volver", false);
+
+        // 2. Configuración de Layout
+        getContentPane().setLayout(new BorderLayout());
+        this.setupCustomTitleBar("CONTROL DE ACCESO Y USUARIOS - HEAP HAVEN");
+
         setupComponents();
         setupListeners();
         refreshTableData();
@@ -43,8 +64,10 @@ public class UserManagementFrame extends JFrame {
         try {
             controller.loadInitialUsers();
         } catch (Exception e) {
-            showErrorMessage("Error loading users: " + e.getMessage());
+            showErrorMessage("Error al cargar usuarios: " + e.getMessage());
         }
+
+        setVisible(true);
     }
 
     private void fillParkingCombo() {
@@ -65,36 +88,79 @@ public class UserManagementFrame extends JFrame {
         }
     }
 
-    private void setupConfiguration() {
-        setTitle("Administracion de usuarios - J-Node System");
-        setSize(700, 500);
-        setLayout(new BorderLayout(10, 10));
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    }
+    private void setupComponents() {
+        JPanel mainContent = new JPanel(new BorderLayout(15, 15));
+        mainContent.setOpaque(false);
+        mainContent.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-    private void setupComponents(){
-        JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
-        formPanel.setBorder(BorderFactory.createTitledBorder("Datos del Usuario"));
+        // --- SECCIÓN SUPERIOR: FORMULARIO ---
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setOpaque(false);
 
-        formPanel.add(new JLabel("Nombre Completo:"));
-        formPanel.add(txtFullName);
-        formPanel.add(new JLabel("Usuario:"));
-        formPanel.add(txtUser);
-        formPanel.add(new JLabel("Contraseña:"));
-        formPanel.add(txtPass);
-        formPanel.add(new JLabel("Rol:"));
-        formPanel.add(comboRole);
-        formPanel.add(new JLabel("Asignar Sede:"));
-        formPanel.add(comboSede);
+        // Borde elegante para el formulario
+        TitledBorder border = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(COLOR_CELESTE, 1), " CREDENCIALES DE ACCESO ");
+        border.setTitleColor(COLOR_CELESTE);
+        border.setTitleFont(new Font("Segoe UI", Font.BOLD, 12));
+        formPanel.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(15, 15, 15, 15)));
 
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.weightx = 1.0;
+
+        // --- Columna 1 ---
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        formPanel.add(createLabel("NOMBRE COMPLETO:"), gbc);
+        gbc.gridy = 1;
+        formPanel.add(txtFullName, gbc);
+
+        gbc.gridy = 2;
+        formPanel.add(createLabel("USUARIO:"), gbc);
+        gbc.gridy = 3;
+        formPanel.add(txtUser, gbc);
+
+        // --- Columna 2 ---
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        formPanel.add(createLabel("CONTRASEÑA:"), gbc);
+
+        // Contenedor para Password + Botón de Ojo
+        JPanel passWrapper = new JPanel(new BorderLayout(5, 0));
+        passWrapper.setOpaque(false);
+
+        btnShowPass = new JButton("👁");
+        styleViewPassButton(btnShowPass);
+
+        passWrapper.add(txtPass, BorderLayout.CENTER);
+        passWrapper.add(btnShowPass, BorderLayout.EAST);
+
+        gbc.gridy = 1;
+        formPanel.add(passWrapper, gbc);
+
+        gbc.gridy = 2;
+        formPanel.add(createLabel("ROL / SEDE ASIGNADA:"), gbc);
+
+        JPanel comboPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        comboPanel.setOpaque(false);
+        comboPanel.add(comboRole);
+        comboPanel.add(comboSede);
+
+        gbc.gridy = 3;
+        formPanel.add(comboPanel, gbc);
+
+        // --- PANEL DE ACCIONES (Botones) ---
         JPanel actionContainer = new JPanel(new BorderLayout());
-        actionContainer.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5));
+        actionContainer.setOpaque(false);
+        actionContainer.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
-        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        leftPanel.setOpaque(false);
         leftPanel.add(btnBack);
 
-        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        rightPanel.setOpaque(false);
         rightPanel.add(btnAdd);
         rightPanel.add(btnUpdate);
         rightPanel.add(btnDelete);
@@ -102,11 +168,13 @@ public class UserManagementFrame extends JFrame {
         actionContainer.add(leftPanel, BorderLayout.WEST);
         actionContainer.add(rightPanel, BorderLayout.EAST);
 
-        JPanel northPanel = new JPanel(new BorderLayout());
-        northPanel.add(formPanel, BorderLayout.CENTER);
-        northPanel.add(actionContainer, BorderLayout.SOUTH);
+        JPanel northWrapper = new JPanel(new BorderLayout());
+        northWrapper.setOpaque(false);
+        northWrapper.add(formPanel, BorderLayout.CENTER);
+        northWrapper.add(actionContainer, BorderLayout.SOUTH);
 
-        String[] columns = {"Usuario", "Nombre", "Rol", "Sede Asignada"};
+        // --- SECCIÓN CENTRAL: TABLA ---
+        String[] columns = {"USUARIO", "NOMBRE", "CONTRASEÑA", "ROL", "SEDE ASIGNADA"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -114,9 +182,28 @@ public class UserManagementFrame extends JFrame {
             }
         };
         userTable = new JTable(tableModel);
+        applyCustomTableStyle(userTable);
 
-        add(northPanel, BorderLayout.NORTH);
-        add(new JScrollPane(userTable), BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(userTable);
+        scrollPane.getViewport().setBackground(COLOR_FONDO);
+        scrollPane.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(60, 60, 60)),
+                BorderFactory.createEmptyBorder(10, 0, 0, 0)
+        ));
+
+        JLabel lblTableTitle = createLabel("REGISTRO DE USUARIOS DEL SISTEMA");
+        lblTableTitle.setForeground(COLOR_CELESTE);
+        lblTableTitle.setBorder(BorderFactory.createEmptyBorder(0, 5, 5, 0));
+
+        JPanel tableContainer = new JPanel(new BorderLayout());
+        tableContainer.setOpaque(false);
+        tableContainer.add(lblTableTitle, BorderLayout.NORTH);
+        tableContainer.add(scrollPane, BorderLayout.CENTER);
+
+        mainContent.add(northWrapper, BorderLayout.NORTH);
+        mainContent.add(tableContainer, BorderLayout.CENTER);
+
+        getContentPane().add(mainContent, BorderLayout.CENTER);
     }
 
     private void setupListeners() {
@@ -132,7 +219,6 @@ public class UserManagementFrame extends JFrame {
         btnDelete.addActionListener(e -> handleDelete());
 
         btnBack.addActionListener(e -> {
-
             boolean isEditing = !txtUser.isEditable();
             boolean hasText = !txtUser.getText().trim().isEmpty() || !txtFullName.getText().trim().isEmpty();
 
@@ -141,6 +227,19 @@ public class UserManagementFrame extends JFrame {
             } else {
                 this.dispose();
                 new Dashboard(currentUser, controller.getFileManager()).setVisible(true);
+            }
+        });
+
+        btnShowPass.addActionListener(e -> {
+            isPassVisible = !isPassVisible;
+            if (isPassVisible) {
+                txtPass.setEchoChar((char) 0); // Revela el texto
+                btnShowPass.setText("🔒");     // Cambia el icono
+                btnShowPass.setForeground(COLOR_CELESTE);
+            } else {
+                txtPass.setEchoChar('•');      // Oculta el texto
+                btnShowPass.setText("👁");
+                btnShowPass.setForeground(Color.GRAY);
             }
         });
     }
@@ -276,11 +375,76 @@ public class UserManagementFrame extends JFrame {
             List<String[]> users = controller.getAllUsers();
             for (String[] row : users) {
                 if (row.length >= 5) {
-                    tableModel.addRow(new Object[]{row[0], row[3], row[2], row[4]});
+                    // row[0]=user, row[1]=pass, row[2]=role, row[3]=name, row[4]=sede
+                    // Lo mostramos como: Usuario, Nombre, Pass (Oculta), Rol, Sede
+                    tableModel.addRow(new Object[]{
+                        row[0],
+                        row[3],
+                        "••••••••", // Por seguridad no mostramos el texto plano
+                        row[2],
+                        row[4]
+                    });
                 }
             }
         } catch (Exception e) {
             showErrorMessage("Error al cargar tabla: " + e.getMessage());
         }
+    }
+
+    // --- MÉTODOS DE SOPORTE ESTÉTICO ---
+    private JLabel createLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setForeground(new Color(180, 180, 180));
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        return lbl;
+    }
+
+    private JTextField createStyledTextField() {
+        JTextField tf = new JTextField();
+        tf.setBackground(COLOR_ACCENTO);
+        tf.setForeground(Color.WHITE);
+        tf.setCaretColor(COLOR_CELESTE);
+        tf.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(70, 70, 70)),
+                BorderFactory.createEmptyBorder(8, 10, 8, 10)));
+        return tf;
+    }
+
+    private JPasswordField createStyledPasswordField() {
+        JPasswordField pf = new JPasswordField();
+        pf.setBackground(COLOR_ACCENTO);
+        pf.setForeground(Color.WHITE);
+        pf.setCaretColor(COLOR_CELESTE);
+        pf.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(70, 70, 70)),
+                BorderFactory.createEmptyBorder(8, 10, 8, 10)));
+        return pf;
+    }
+
+    private void styleComboBox(JComboBox<?> cb) {
+        cb.setBackground(COLOR_ACCENTO);
+        cb.setForeground(Color.WHITE);
+        cb.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        ((JLabel) cb.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+    }
+
+    private void styleViewPassButton(JButton btn) {
+        btn.setPreferredSize(new Dimension(40, 0));
+        btn.setBackground(COLOR_ACCENTO);
+        btn.setForeground(Color.GRAY);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createLineBorder(new Color(70, 70, 70)));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Efecto Hover simple
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(new Color(60, 60, 60));
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(COLOR_ACCENTO);
+            }
+        });
     }
 }

@@ -5,89 +5,108 @@ import model.entities.User;
 import javax.swing.*;
 import java.awt.*;
 
-public class SpaceConfigFrame extends JFrame {
+public class SpaceConfigFrame extends BaseFrame {
 
-    private final JLabel lblRemaining = new JLabel("Espacios Restantes: 0");
+    private final JLabel lblRemaining = new JLabel();
     private final JComboBox<Integer> comboQtyToConfig = new JComboBox<>();
-    private final JCheckBox chkIsPreferential = new JCheckBox("Espacio(s) Preferencial(s)");
+    private final JCheckBox chkIsPreferential = new JCheckBox("Espacio(s) Preferencial(es)");
     private final JComboBox<String> comboVehicleType = new JComboBox<>(
             new String[]{"Automóvil", "Motocicleta", "Bicicleta", "Vehículo Pesado"}
     );
 
     private final JButton btnExit = new JButton("Salir");
     private final JButton btnBack = new JButton("Atrás");
-    private final JButton btnFinish = new JButton("Crear Parqueo");
+    private final JButton btnFinish = new JButton("Configurar Bloque");
 
     private final ParkingController controller;
     private final User currentUser;
     private final String oldName;
 
     public SpaceConfigFrame(ParkingController controller, User user, String originalName) {
+        super("Heap Haven - Configuración de Espacios", 500, 500);
         this.controller = controller;
         this.currentUser = user;
         this.oldName = originalName;
 
-        setupConfiguration();
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().setBackground(COLOR_FONDO);
+        this.setupCustomTitleBar("CONFIGURACIÓN DE INFRAESTRUCTURA");
+
         setupComponents();
         setupListeners();
         updateUI();
-    }
 
-    private void setupConfiguration() {
-        setTitle("J-Node - Configuración de asignación de espacios");
-        setSize(500, 400);
-        setLayout(new BorderLayout(15, 15));
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setVisible(true);
     }
 
     private void setupComponents() {
-        JPanel panelMain = new JPanel(new GridLayout(5, 1, 10, 10));
-        panelMain.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        JPanel mainContent = new JPanel(new BorderLayout(15, 15));
+        mainContent.setOpaque(false);
+        mainContent.setBorder(BorderFactory.createEmptyBorder(25, 30, 25, 30));
 
-        // Status Label
+        // Panel de información superior
+        JPanel infoPanel = new JPanel(new BorderLayout());
+        infoPanel.setOpaque(false);
+        infoPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(60, 60, 60)),
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        ));
+
+        lblRemaining.setForeground(Color.WHITE);
         lblRemaining.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        panelMain.add(lblRemaining);
+        infoPanel.add(lblRemaining, BorderLayout.CENTER);
 
-        // Quantity Row
-        JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row1.add(new JLabel("Espacios a Asignar:"));
-        row1.add(comboQtyToConfig);
-        panelMain.add(row1);
+        // Formulario central
+        JPanel panelForm = new JPanel(new GridLayout(3, 1, 20, 20));
+        panelForm.setOpaque(false);
+        panelForm.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 
-        panelMain.add(chkIsPreferential);
+        panelForm.add(createFieldGroup("CANTIDAD DE ESPACIOS A ASIGNAR", comboQtyToConfig));
 
-        // Vehicle Type Row
-        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row2.add(new JLabel("Tipo de Vehículo:"));
-        row2.add(comboVehicleType);
-        panelMain.add(row2);
+        // Estilo especial para el Checkbox
+        chkIsPreferential.setOpaque(false);
+        chkIsPreferential.setForeground(COLOR_CELESTE);
+        chkIsPreferential.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        chkIsPreferential.setFocusPainted(false);
+        panelForm.add(chkIsPreferential);
 
-        add(panelMain, BorderLayout.CENTER);
+        panelForm.add(createFieldGroup("TIPO DE VEHÍCULO ADMITIDO", comboVehicleType));
 
-        // Navigation Panel
-        JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        mainContent.add(infoPanel, BorderLayout.NORTH);
+        mainContent.add(panelForm, BorderLayout.CENTER);
+
+        // Panel de Navegación
+        JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        panelButtons.setOpaque(false);
+
+        styleButton(btnExit, false);
+        styleButton(btnBack, false);
+        styleButton(btnFinish, true);
+
         panelButtons.add(btnExit);
         panelButtons.add(btnBack);
         panelButtons.add(btnFinish);
-        add(panelButtons, BorderLayout.SOUTH);
+
+        mainContent.add(panelButtons, BorderLayout.SOUTH);
+        getContentPane().add(mainContent, BorderLayout.CENTER);
     }
 
     private void setupListeners() {
         btnFinish.addActionListener(e -> handleFinishBlock());
-
         btnBack.addActionListener(e -> {
             new ParkingCreateFrame(currentUser, controller, controller.getTempParking()).setVisible(true);
             this.dispose();
         });
-
         btnExit.addActionListener(e -> handleExit());
-
         chkIsPreferential.addActionListener(e -> updateUI());
     }
 
     private void handleFinishBlock() {
         try {
+            if (comboQtyToConfig.getSelectedItem() == null) {
+                return;
+            }
+
             int qty = (int) comboQtyToConfig.getSelectedItem();
             String type = (String) comboVehicleType.getSelectedItem();
             boolean isPref = chkIsPreferential.isSelected();
@@ -95,10 +114,12 @@ public class SpaceConfigFrame extends JFrame {
             int totalCap = controller.getTempParking().getNumberOfSpaces();
             int remaining = controller.getRemainingSpaces();
 
+            // Lógica de rangos para validación de edición
             int startRange = (totalCap - remaining) + 1;
             int endRange = startRange + qty - 1;
 
             if (oldName != null) {
+                // Validación crítica: Verifica si los espacios ya están ocupados en el archivo real
                 controller.validateSpaceBlockIsFree(oldName, startRange, endRange, type, isPref);
             }
 
@@ -107,7 +128,7 @@ public class SpaceConfigFrame extends JFrame {
             if (controller.isConfigFinished()) {
                 finalizeParkingSetup();
             } else {
-                JOptionPane.showMessageDialog(this, "Bloque configurado con éxito.");
+                JOptionPane.showMessageDialog(this, "Bloque configurado con éxito. Continúe con los restantes.");
                 updateUI();
             }
 
@@ -120,19 +141,18 @@ public class SpaceConfigFrame extends JFrame {
     private void finalizeParkingSetup() {
         try {
             controller.saveParkingConfiguration(oldName);
-
-            JOptionPane.showMessageDialog(this, "Parqueo Creado Exitosamente");
+            JOptionPane.showMessageDialog(this, "¡Estructura guardada y archivos generados!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
             new ParkingManagementFrame(currentUser, controller).setVisible(true);
             this.dispose();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error critico al guardar: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error crítico al guardar: " + ex.getMessage());
         }
     }
 
     private void handleExit() {
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Desea salir de la ventana actual? Los cambios no se guardarán.",
-                "Confirmar salida", JOptionPane.YES_NO_OPTION);
+                "¿Desea cancelar la configuración? Perderá los bloques definidos en esta sesión.",
+                "Confirmar salida", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
             new ParkingManagementFrame(currentUser, controller).setVisible(true);
@@ -144,8 +164,10 @@ public class SpaceConfigFrame extends JFrame {
         int totalRemaining = controller.getRemainingSpaces();
         int prefMissing = controller.getPrefRemaining();
 
-        lblRemaining.setText("<html>Espacios restantes: <b>" + totalRemaining + "</b><br>"
-                + "Espacios preferenciales restantes: <b>" + prefMissing + "</b></html>");
+        lblRemaining.setText("<html><body style='width: 300px;'>"
+                + "Espacios totales por configurar: <b style='color:#00BFFF;'>" + totalRemaining + "</b><br>"
+                + "Cupos preferenciales pendientes: <b style='color:#00BFFF;'>" + prefMissing + "</b>"
+                + "</body></html>");
 
         updateQtyCombo(totalRemaining);
 
@@ -156,6 +178,7 @@ public class SpaceConfigFrame extends JFrame {
             chkIsPreferential.setEnabled(totalRemaining > 0);
         }
 
+        btnFinish.setText(controller.isConfigFinished() ? "Finalizar y Guardar" : "Configurar Bloque");
         btnFinish.setEnabled(totalRemaining > 0 || controller.isConfigFinished());
     }
 
@@ -166,4 +189,37 @@ public class SpaceConfigFrame extends JFrame {
         }
     }
 
+    private JPanel createFieldGroup(String labelText, JComboBox<?> combo) {
+        JPanel group = new JPanel(new BorderLayout(5, 5));
+        group.setOpaque(false);
+
+        JLabel lbl = new JLabel(labelText);
+        lbl.setForeground(new Color(150, 150, 150));
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
+
+        // Estilo del combo
+        combo.setBackground(COLOR_ACCENTO);
+        combo.setForeground(Color.WHITE);
+        combo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        ((JLabel) combo.getRenderer()).setHorizontalAlignment(SwingConstants.LEFT);
+        combo.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
+
+        group.add(lbl, BorderLayout.NORTH);
+        group.add(combo, BorderLayout.CENTER);
+        return group;
+    }
+
+    private void styleButton(JButton btn, boolean primary) {
+        btn.setFocusPainted(false);
+        btn.setPreferredSize(new Dimension(130, 40));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        if (primary) {
+            btn.setBackground(COLOR_CELESTE);
+            btn.setForeground(COLOR_FONDO);
+        } else {
+            btn.setBackground(new Color(60, 60, 60));
+            btn.setForeground(Color.WHITE);
+        }
+        btn.setBorder(BorderFactory.createLineBorder(btn.getBackground().darker()));
+    }
 }

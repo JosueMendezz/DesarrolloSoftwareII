@@ -5,11 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
+import java.util.stream.Collectors;
 import java.util.Set;
 import model.data.FileManager;
 import model.entities.Customer;
 import model.entities.*;
+import java.util.HashSet;
 
 public class VehicleController {
 
@@ -48,24 +49,18 @@ public class VehicleController {
     }
 
     public int findClosestAvailableSpace(String parkingName, String vehicleType, boolean isPreferential) throws Exception {
-        // Cargar configuración detallada (numero|tipo|preferencial)
         List<String[]> spaceConfigs = fileManager.loadSpecificParkingConfig(parkingName);
-
         List<String[]> parkedVehicles = fileManager.loadAllParkedVehicles();
-        Set<Integer> occupiedSpaces = new HashSet<>();
-        for (String[] v : parkedVehicles) {
-            if (v.length > 10 && v[9].equalsIgnoreCase(parkingName)) {
-                occupiedSpaces.add(Integer.parseInt(v[10]));
-            }
-        }
+
+        Set<Integer> occupiedSpaces = parkedVehicles.stream()
+                .filter(v -> v.length > 10 && v[9].equalsIgnoreCase(parkingName))
+                .map(v -> Integer.parseInt(v[10]))
+                .collect(Collectors.toSet());
 
         for (String[] config : spaceConfigs) {
             int spaceNumber = Integer.parseInt(config[0]);
-            String allowedType = config[1];
-            boolean spaceIsPreferential = Boolean.parseBoolean(config[2]);
-
             if (!occupiedSpaces.contains(spaceNumber)) {
-                if (allowedType.equalsIgnoreCase(vehicleType) && spaceIsPreferential == isPreferential) {
+                if (config[1].equalsIgnoreCase(vehicleType) && Boolean.parseBoolean(config[2]) == isPreferential) {
                     return spaceNumber;
                 }
             }
@@ -118,9 +113,7 @@ public class VehicleController {
                     }
                 }
 
-                Vehicle instance = createVehicleInstance(v[0], v[1], v[2], v[3], v[4], v[8], new ArrayList<>());
-
-                double rate = instance.getHourlyRate();
+                double rate = getRateFromFile(v[1]);
 
                 String ownerName = getCustomerName(v[8]);
 
@@ -151,15 +144,9 @@ public class VehicleController {
     }
 
     public List<String> getAvailableParkingNames() throws IOException {
-        List<String> lines = fileManager.readAllParkingLines();
-        List<String> names = new ArrayList<>();
-        for (String line : lines) {
-            String[] parts = line.split("\\|");
-            if (parts.length > 0) {
-                names.add(parts[0]);
-            }
-        }
-        return names;
+        return fileManager.readAllParkingLines().stream()
+                .map(line -> line.split("\\|")[0])
+                .collect(Collectors.toList());
     }
 
     public Customer findCustomerById(String id) throws Exception {
@@ -177,10 +164,6 @@ public class VehicleController {
     }
 
     public void registerNewOwner(String id, String name, boolean isPreferential) throws Exception {
-        if (customerExists(id)) {
-
-            return;
-        }
         String data = id + "," + name + "," + isPreferential;
         fileManager.appendCustomer(data);
     }
@@ -191,30 +174,192 @@ public class VehicleController {
 
     private String getCustomerName(String ownerId) throws Exception {
         Customer owner = findCustomerById(ownerId);
-        return (owner != null) ? owner.getName() : "Desconocido";
+        return (owner != null) ? owner.getName() : "Desconocido (" + ownerId + ")";
     }
 
     public double calculateAmount(String entryTimeStr, double hourlyRate) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         LocalDateTime entryTime = LocalDateTime.parse(entryTimeStr, formatter);
-        LocalDateTime exitTime = LocalDateTime.now();
-
-        long minutes = java.time.Duration.between(entryTime, exitTime).toMinutes();
-
+        long minutes = java.time.Duration.between(entryTime, LocalDateTime.now()).toMinutes();
         double hours = Math.ceil(minutes / 60.0);
+        if (hours <= 0) {
+            hours = 1; // Cobrar al menos la primera hora
+        }
         return hours * hourlyRate;
     }
 
     public void processPayment(String plate) throws IOException {
         List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
-        List<String[]> updatedList = allVehicles.stream()
+        List<String> remaining = allVehicles.stream()
                 .filter(v -> !v[0].equalsIgnoreCase(plate))
-                .collect(java.util.stream.Collectors.toList());
-
-        List<String> lines = updatedList.stream()
                 .map(v -> String.join("|", v))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
+        fileManager.saveLinesToFile("vehicles.txt", remaining);
+    }
 
-        fileManager.saveLinesToFile("vehicles.txt", lines);
+    public double calculateFinalPrice(String plate, String parkingName) throws Exception {
+        // 1. Buscar el vehículo en el archivo de ocupación
+        List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
+        String[] vehicleData = allVehicles.stream()
+                .filter(v -> v[0].equalsIgnoreCase(plate))
+                .findFirst()
+                .orElseThrow(() -> new Exception("Vehículo no encontrado en el sistema."));
+
+        String type = vehicleData[1];
+        String entryTimeStr = vehicleData[11];
+
+        // 2. Obtener la tarifa usando el método que ya lee el archivo
+        double hourlyRate = getRateFromFile(type);
+
+        return calculateAmount(entryTimeStr, hourlyRate);
+    }
+
+    public double getRateFromFile(String type) {
+        try {
+            List<String> lines = fileManager.readLinesFromFile("rates.txt");
+            for (String line : lines) {
+                String[] parts = line.split("\\|");
+                // Comparamos ignorando mayúsculas y espacios extra
+                if (parts[0].trim().equalsIgnoreCase(type.trim())) {
+                    return Double.parseDouble(parts[1]);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error leyendo tarifas: " + e.getMessage());
+        }
+
+        // Backup de emergencia
+        String t = type.toLowerCase();
+        if (t.contains("auto")) {
+            return 1000.0;
+        }
+        if (t.contains("moto")) {
+            return 500.0;
+        }
+        if (t.contains("bici")) {
+            return 200.0;
+        }
+        if (t.contains("pesado")) {
+            return 2000.0;
+        }
+
+        return 1000.0; // Default absoluto
+    }
+
+    public void finalizeTransaction(String plate, double amount, String operator, String parkingName) throws Exception {
+        // 1. Recuperar toda la información del vehículo antes de borrarlo
+        List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
+        String[] v = allVehicles.stream()
+                .filter(veh -> veh[0].equalsIgnoreCase(plate))
+                .findFirst()
+                .orElseThrow(() -> new Exception("Error crítico: Vehículo no encontrado al finalizar transacción."));
+
+        // v[0]=placa, v[1]=tipo, v[2]=marca, v[3]=modelo, v[4]=color, v[5]=detalles, 
+        // v[6]=preferencial, v[7]=extras, v[8]=ownerId, v[9]=sede, v[10]=espacio, v[11]=entrada
+        // 2. Preparar los datos extendidos
+        String exitTime = LocalDateTime.now().format(formatter);
+        String entryTime = v[11];
+        String ownerId = v[8];
+        String type = v[1];
+        String brandModel = v[2] + " " + v[3];
+        String space = v[10];
+        String isPreferential = v[6].equalsIgnoreCase("true") ? "PREFERENCIAL" : "REGULAR";
+        double appliedRate = getRateFromFile(type); // La tarifa que se le aplicó
+
+        // 3. Crear la línea de historial "Mega Completa"
+        StringBuilder sb = new StringBuilder();
+        sb.append(exitTime).append("|") // Hora de salida
+                .append(plate).append("|") // Placa
+                .append(ownerId).append("|") // ID Cliente
+                .append(type).append("|") // Tipo vehículo
+                .append(brandModel).append("|") // Marca y Modelo
+                .append(space).append("|") // Espacio físico
+                .append(isPreferential).append("|") // Si fue preferencial
+                .append(entryTime).append("|") // Hora de entrada
+                .append(appliedRate).append("|") // Precio x hora
+                .append(String.format("%.2f", amount)).append("|") // Total cobrado
+                .append(operator).append("|") // Quien cobró
+                .append(parkingName);                // En qué sucursal
+
+        // 4. Guardar en history.txt
+        fileManager.appendToFile("history.txt", sb.toString());
+
+        // 5. Liberar el espacio (Eliminar de vehicles.txt)
+        processPayment(plate);
+    }
+
+    public String getFullVehicleInfo(String plate) {
+        try {
+            List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
+            for (String[] v : allVehicles) {
+                // Estructura del array v según tu processVehicleEntry:
+                // [0]placa, [1]tipo, [2]marca, [3]modelo, [4]color, [5]detalles, 
+                // [6]preferencial, [7]extras, [8]ownerId, [9]sede, [10]espacio, [11]entrada
+
+                if (v[0].equalsIgnoreCase(plate)) {
+                    String ownerName = getCustomerName(v[8]);
+                    double rate = getRateFromFile(v[1]);
+
+                    // Formatear autorizados
+                    String autorizados = v[7].replace(";", ", ");
+                    if (autorizados.equalsIgnoreCase("None") || autorizados.isEmpty()) {
+                        autorizados = "<i>No se registraron responsables adicionales</i>";
+                    }
+
+                    // Determinar etiqueta de espacio preferencial
+                    String prefStatus = v[6].equalsIgnoreCase("true")
+                            ? "<b style='color: #FF5252;'> SÍ (Preferencial)</b>" : "No";
+
+                    // Retorno con formato HTML para "Visión Empresarial"
+                    return "<html><body style='width: 300px; font-family: sans-serif;'>"
+                            + "<h2 style='color: #2196F3; border-bottom: 1px solid #ccc;'>EXPEDIENTE: " + v[0] + "</h2>"
+                            + "<b>--- INFORMACIÓN DEL CLIENTE ---</b><br>"
+                            + "<b>Dueño:</b> " + ownerName + "<br>"
+                            + "<b>ID Propietario:</b> " + v[8] + "<br><br>"
+                            + "<b>--- DETALLES DEL VEHÍCULO ---</b><br>"
+                            + "<b>Tipo:</b> " + v[1] + "<br>"
+                            + "<b>Marca/Modelo:</b> " + v[2] + " " + v[3] + "<br>"
+                            + "<b>Color:</b> " + v[4] + "<br>"
+                            + "<b>Observaciones:</b> " + (v[5].equals("N/A") ? "<i>Sin notas</i>" : v[5]) + "<br><br>"
+                            + "<b>--- UBICACIÓN Y ACCESO ---</b><br>"
+                            + "<b>Sede:</b> " + v[9] + "<br>"
+                            + "<b>Espacio Asignado:</b> <span style='font-size: 12pt; color: #4CAF50;'>" + v[10] + "</span><br>"
+                            + "<b>Acceso Preferencial:</b> " + prefStatus + "<br><br>"
+                            + "<b>--- REGISTRO OPERATIVO ---</b><br>"
+                            + "<b>Hora Entrada:</b> " + v[11] + "<br>"
+                            + "<b>Tarifa Actual:</b> ₡" + rate + " / hora<br>"
+                            + "<b>Autorizados a retirar:</b><br>" + autorizados
+                            + "</body></html>";
+                }
+            }
+        } catch (Exception e) {
+            return "<html><b style='color:red;'>Error al obtener detalles:</b> " + e.getMessage() + "</html>";
+        }
+        return "Vehículo no encontrado.";
+    }
+
+    public List<String[]> getAllRates() {
+        List<String> lines = fileManager.readLinesFromFile("rates.txt");
+        return lines.stream()
+                .map(line -> line.split("\\|"))
+                .collect(Collectors.toList());
+    }
+
+    public void updateRate(String type, String newPrice) throws IOException {
+        List<String[]> allRates = getAllRates();
+        List<String> updatedLines = new ArrayList<>();
+
+        for (String[] rate : allRates) {
+            if (rate[0].equalsIgnoreCase(type)) {
+                updatedLines.add(type + "|" + newPrice);
+            } else {
+                updatedLines.add(rate[0] + "|" + rate[1]);
+            }
+        }
+        fileManager.saveLinesToFile("rates.txt", updatedLines);
+    }
+
+    public void updateAllRates(List<String> updatedLines) throws IOException {
+        // Usamos el fileManager que ya tienes para sobreescribir el archivo con la nueva lista
+        fileManager.saveLinesToFile("rates.txt", updatedLines);
     }
 }

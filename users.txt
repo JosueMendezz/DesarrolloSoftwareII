@@ -1,4 +1,5 @@
 jms23,2323,ADMIN,Josue Mendez,TODOS
 ericka,1234,ADMIN,Ericka Barrantes,TODOS
 bray,0000,ADMIN,Brayan Murillo,TODOS
-dmora,1111,OPERATOR,Dario Mora,A
+dmora,1234,OPERATOR,Dario Mora,Paraíso
+esteban,1212,OPERATOR,Esteban Sanabria,UCR

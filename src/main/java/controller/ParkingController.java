@@ -6,6 +6,7 @@ import model.data.FileManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import model.entities.User;
 
 public class ParkingController {
 
@@ -220,18 +221,13 @@ public class ParkingController {
         return count;
     }
 
-    public List<String> getAllParkingLotNames() {
+    public List<String> getAllParkingLotNames() throws Exception {
         List<String> names = new ArrayList<>();
-        try {
-            List<String> data = fileManager.readAllParkingLines();
-
-            for (String line : data) {
-                if (!line.trim().isEmpty()) {
-                    names.add(line.split("\\|")[0]);
-                }
+        List<String> data = fileManager.readAllParkingLines();
+        for (String line : data) {
+            if (!line.trim().isEmpty()) {
+                names.add(line.split("\\|")[0]);
             }
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
         }
         return names;
     }
@@ -281,4 +277,58 @@ public class ParkingController {
                     + " porque actualmente hay " + occupiedPrefs + " vehículos preferenciales parqueados.");
         }
     }
+
+    public List<String[]> getFilteredParkingSummary(User user) throws Exception { // Propagamos
+        List<String[]> summary = new ArrayList<>();
+        // Si readAllParkingLines lanza IOException, sube a la vista automáticamente
+        List<String> lines = fileManager.readAllParkingLines();
+
+        for (String line : lines) {
+            if (line.trim().isEmpty()) {
+                continue;
+            }
+
+            String[] data = line.split("\\|");
+            String name = data[0];
+
+            boolean isAdmin = user.getRole().equalsIgnoreCase("ADMIN");
+            boolean isAssignedSede = user.getAssignedParking().equalsIgnoreCase(name);
+
+            if (isAdmin || isAssignedSede) {
+                String total = data[1];
+                String pref = data[2];
+                int regular = Integer.parseInt(total) - Integer.parseInt(pref);
+
+                summary.add(new String[]{
+                    name.toUpperCase(),
+                    total + " espacios",
+                    pref + " (Preferenciales)",
+                    regular + " (Regulares)"
+                });
+            }
+        }
+        return summary;
+    }
+    
+    public List<String[]> getDetailedSpaceConfig(String parkingName) throws Exception {
+    List<String[]> details = new ArrayList<>();
+    // Intentamos leer el archivo específico: Nombre_config.txt
+    String fileName = parkingName + "_config.txt";
+    List<String> lines = fileManager.readLinesFromFile(fileName);
+
+    for (String line : lines) {
+        if (line.trim().isEmpty()) continue;
+        String[] data = line.split("\\|"); // Formato: numero|tipo|esPreferencial
+        
+        if (data.length >= 3) {
+            String status = data[2].equalsIgnoreCase("true") ? "PREFERENCIAL" : "REGULAR";
+            details.add(new String[]{
+                "Espacio #" + data[0],
+                data[1].toUpperCase(), // Tipo de vehículo
+                status
+            });
+        }
+    }
+    return details;
+}
 }

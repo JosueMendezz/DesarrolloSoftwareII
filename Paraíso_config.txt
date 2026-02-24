@@ -1,0 +1,10 @@
+1|Automóvil|true
+2|Automóvil|false
+3|Motocicleta|true
+4|Motocicleta|false
+5|Bicicleta|true
+6|Bicicleta|false
+7|Vehículo Pesado|false
+8|Vehículo Pesado|true
+9|Automóvil|true
+10|Automóvil|false

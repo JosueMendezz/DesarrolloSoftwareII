@@ -1,0 +1,4 @@
+Automóvil|1000
+Motocicleta|550
+Bicicleta|250
+Vehículo Pesado|2000

@@ -1,23 +1,23 @@
 package view;
 
 import controller.CustomerController;
-import model.data.FileManager;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.border.TitledBorder;
 import model.entities.User;
 
-public class CustomerFrame extends JFrame {
+public class CustomerFrame extends BaseFrame {
 
-    private final JTextField txtId = new JTextField(15);
-    private final JTextField txtName = new JTextField(15);
-    private final JCheckBox chkPreferential = new JCheckBox("Espacio Preferencial?");
-    private final JButton registerButton = new JButton("Registrar");
-    private final JButton updateButton = new JButton("Modificar");
-    private final JButton deleteButton = new JButton("Eliminar");
-    private final JButton btnExit = new JButton("Volver");
+    private final JTextField txtId;
+    private final JTextField txtName;
+    private final JCheckBox chkPreferential;
+    private final JButton registerButton;
+    private final JButton updateButton;
+    private final JButton deleteButton;
+    private final JButton btnExit;
 
     private JTable customerTable;
     private DefaultTableModel tableModel;
@@ -26,48 +26,95 @@ public class CustomerFrame extends JFrame {
     private final CustomerController controller;
 
     public CustomerFrame(User user, CustomerController controller) {
+        super("Heap Haven - Gestión de Clientes", 700, 600);
         this.currentUser = user;
         this.controller = controller;
 
-        setupConfiguration();
+        txtId = createStyledTextField();
+        txtName = createStyledTextField();
+        chkPreferential = new JCheckBox("¿APLICA ESPACIO PREFERENCIAL?");
+        styleCheckbox(chkPreferential);
+
+        registerButton = createStyledButton("Registrar", true);
+        updateButton = createStyledButton("Modificar", false);
+        deleteButton = createStyledButton("Eliminar", false);
+        btnExit = createStyledButton("Volver", false);
+
+        getContentPane().setLayout(new BorderLayout());
+        this.setupCustomTitleBar("ADMINISTRACIÓN DE CLIENTES - HEAP HAVEN");
+
         setupComponents();
         setupListeners();
         initialDataLoad();
-        this.getRootPane().setDefaultButton(registerButton);
-    }
 
-    private void setupConfiguration() {
-        setTitle("Customer Management - J-Node System");
-        setSize(600, 500);
-        setLayout(new BorderLayout(10, 10));
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        this.getRootPane().setDefaultButton(registerButton);
+        setVisible(true);
     }
 
     private void setupComponents() {
-        JPanel formPanel = new JPanel(new GridLayout(5, 1, 5, 5));
-        formPanel.setBorder(BorderFactory.createTitledBorder("Credenciales del cliente"));
-        formPanel.add(new JLabel("ID:"));
-        formPanel.add(txtId);
-        formPanel.add(new JLabel("Nombre Completo:"));
-        formPanel.add(txtName);
-        formPanel.add(chkPreferential);
+        JPanel mainContent = new JPanel(new BorderLayout(15, 15));
+        mainContent.setOpaque(false);
+        mainContent.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        // --- FORMULARIO IZQUIERDA ---
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setOpaque(false);
+        TitledBorder border = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(COLOR_CELESTE, 1), " DATOS DEL CLIENTE ");
+        border.setTitleColor(COLOR_CELESTE);
+        border.setTitleFont(new Font("Segoe UI", Font.BOLD, 12));
+        formPanel.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        formPanel.add(createLabel("IDENTIFICACIÓN:"), gbc);
+        gbc.gridy = 1;
+        formPanel.add(txtId, gbc);
+
+        gbc.gridy = 2;
+        formPanel.add(createLabel("NOMBRE COMPLETO:"), gbc);
+        gbc.gridy = 3;
+        formPanel.add(txtName, gbc);
+
+        gbc.gridy = 4;
+        formPanel.add(chkPreferential, gbc);
+
+        // --- PANEL DE BOTONES ---
+        JPanel buttonPanel = new JPanel(new GridLayout(4, 1, 10, 10));
+        buttonPanel.setOpaque(false);
         buttonPanel.add(registerButton);
         buttonPanel.add(updateButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(btnExit);
 
-        JPanel topContainer = new JPanel(new BorderLayout());
+        // Contenedor superior (Form + Botones)
+        JPanel topContainer = new JPanel(new BorderLayout(20, 0));
+        topContainer.setOpaque(false);
         topContainer.add(formPanel, BorderLayout.CENTER);
-        topContainer.add(buttonPanel, BorderLayout.SOUTH);
-        add(topContainer, BorderLayout.NORTH);
+        topContainer.add(buttonPanel, BorderLayout.EAST);
 
-        String[] columns = {"ID", "Nombre", "Preferencial"};
-        tableModel = new DefaultTableModel(columns, 0);
+        mainContent.add(topContainer, BorderLayout.NORTH);
+
+        // --- TABLA ---
+        String[] columns = {"ID", "NOMBRE COMPLETO", "PREFERENCIAL"};
+        tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
         customerTable = new JTable(tableModel);
-        add(new JScrollPane(customerTable), BorderLayout.CENTER);
+        applyCustomTableStyle(customerTable); // ¡Método Maestro de BaseFrame!
+
+        JScrollPane scrollPane = new JScrollPane(customerTable);
+        scrollPane.getViewport().setBackground(COLOR_FONDO);
+        mainContent.add(scrollPane, BorderLayout.CENTER);
+
+        getContentPane().add(mainContent, BorderLayout.CENTER);
     }
 
     private void setupListeners() {
@@ -197,5 +244,32 @@ public class CustomerFrame extends JFrame {
         chkPreferential.setSelected(false);
         txtId.setEditable(true);
         customerTable.clearSelection();
+    }
+
+    // --- MÉTODOS AUXILIARES DE ESTILO ---
+    private JLabel createLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setForeground(COLOR_TEXTO);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        return lbl;
+    }
+
+    private JTextField createStyledTextField() {
+        JTextField tf = new JTextField(15);
+        tf.setBackground(COLOR_ACCENTO);
+        tf.setForeground(Color.WHITE);
+        tf.setCaretColor(COLOR_CELESTE);
+        tf.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(80, 80, 80)),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        return tf;
+    }
+
+    private void styleCheckbox(JCheckBox cb) {
+        cb.setOpaque(false);
+        cb.setForeground(COLOR_TEXTO);
+        cb.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        cb.setFocusPainted(false);
     }
 }

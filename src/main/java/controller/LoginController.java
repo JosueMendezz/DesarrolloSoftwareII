@@ -1,12 +1,10 @@
 package controller;
 
-import java.io.IOException;
 import java.util.List;
 import model.data.FileManager;
 import model.entities.User;
 import view.LoginFrame;
 import view.Dashboard;
-import javax.swing.JOptionPane;
 
 public class LoginController {
 
@@ -16,65 +14,67 @@ public class LoginController {
     public LoginController(LoginFrame view, FileManager dataManager) {
         this.view = view;
         this.dataManager = dataManager;
+        // No instanciamos la vista, la recibimos por parámetro
         initListeners();
     }
 
     private void initListeners() {
-        view.getBtnLogin().addActionListener(e -> handleLogin());
+        // El controlador solo coordina, no maneja el error aquí
+        view.getBtnLogin().addActionListener(e -> {
+            try {
+                handleLogin();
+            } catch (Exception ex) {
+                // La vista es la encargada de mostrar el error al usuario
+                view.showErrorMessage(ex.getMessage());
+            }
+        });
     }
 
-    private void handleLogin() {
-        try {
-            String userStr = view.getTxtUser().getText();
-            String passStr = new String(view.getTxtPassword().getPassword());
+    // El método ahora lanza la excepción hacia el listener de la vista
+    private void handleLogin() throws Exception {
+        String userStr = view.getUsername();
+        String passStr = view.getPassword();
 
-            User user = authenticate(userStr, passStr);
+        // Lógica de autenticación
+        User user = authenticate(userStr, passStr);
 
-            JOptionPane.showMessageDialog(view, "Bienvenido " + user.getRole() + ": " + user.getUsername());
-
-            new Dashboard(user, dataManager);
-            view.dispose();
-
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(view, ex.getMessage(), "Error de Login", JOptionPane.ERROR_MESSAGE);
-        }
+        // Notificamos éxito y delegamos la navegación
+        view.showSuccessMessage("Bienvenido " + user.getRole() + ": " + user.getUsername());
+        
+        // Delegamos la apertura del Dashboard (la vista se encarga de sí misma)
+        new Dashboard(user, dataManager).setVisible(true);
+        view.dispose();
     }
 
-    public User authenticate(String username, String password) throws IOException, Exception {
+    public User authenticate(String username, String password) throws Exception {
         validateInput(username, password);
 
         List<User> users = dataManager.loadUsers();
-        validateUserList(users);
+        if (users == null || users.isEmpty()) {
+            throw new Exception("No hay usuarios registrados en el sistema.");
+        }
 
         User authenticatedUser = findUser(username, password, users);
 
         if (authenticatedUser == null) {
-            throw new Exception("Usuario o contraseña incorrectos. Intente de nuevo.");
+            throw new Exception("Usuario o contraseña incorrectos.");
         }
 
         return authenticatedUser;
     }
 
     private void validateInput(String username, String password) throws Exception {
-        if (username == null || username.trim().isEmpty()
-                || password == null || password.trim().isEmpty()) {
-            throw new Exception("Por favor, ingrese sus credenciales (usuario y contraseña).");
-        }
-    }
-
-    private void validateUserList(List<User> users) throws Exception {
-        if (users == null || users.isEmpty()) {
-            throw new Exception("No hay usuarios registrados en el sistema.");
+        if (username == null || username.trim().isEmpty() || 
+            password == null || password.trim().isEmpty()) {
+            throw new Exception("Por favor, ingrese sus credenciales.");
         }
     }
 
     private User findUser(String username, String password, List<User> users) {
-        for (User user : users) {
-            if (user.getUsername().equals(username.trim())
-                    && user.getPassword().equals(password.trim())) {
-                return user;
-            }
-        }
-        return null;
+        return users.stream()
+                .filter(u -> u.getUsername().equals(username.trim()) && 
+                             u.getPassword().equals(password.trim()))
+                .findFirst()
+                .orElse(null);
     }
 }
