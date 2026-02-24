@@ -134,16 +134,13 @@ public class ParkingController {
 
     public void deleteParkingBranch(String name) throws Exception {
         List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
-
         long count = allVehicles.stream()
                 .filter(v -> v.length > 9 && v[9].trim().equalsIgnoreCase(name.trim()))
                 .count();
-
         if (count > 0) {
             throw new Exception("No se puede eliminar: El parqueo '" + name
                     + "' tiene " + count + " vehículo(s) dentro actualmente.");
         }
-
         List<String> lines = fileManager.readAllParkingLines();
         List<String> remaining = new ArrayList<>();
         for (String line : lines) {
@@ -155,7 +152,6 @@ public class ParkingController {
             }
         }
         fileManager.saveParkingData(remaining);
-
         java.io.File configFile = new java.io.File(name + "_config.txt");
         if (configFile.exists()) {
             configFile.delete();
@@ -236,24 +232,20 @@ public class ParkingController {
         if (parkingName == null) {
             return;
         }
-
         List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
         for (String[] v : allVehicles) {
             if (v.length > 10 && v[9].trim().equalsIgnoreCase(parkingName.trim())) {
                 try {
                     int occupiedSpace = Integer.parseInt(v[10].trim());
-
                     if (occupiedSpace >= start && occupiedSpace <= end) {
                         String vehicleType = v[1].trim();
                         boolean isVehiclePreferential = v[6].trim().equalsIgnoreCase("true");
-
                         if (!vehicleType.equalsIgnoreCase(newType.trim())) {
                             throw new Exception("El espacio #" + occupiedSpace + " está ocupado por un(a) " + vehicleType
                                     + ". No puede cambiar el tipo de vehículo de este bloque.");
                         }
-
                         if (isVehiclePreferential && !newIsPref) {
-                            throw new Exception("¡BLOQUEO DE SEGURIDAD!\n"
+                            throw new Exception("BLOQUEO DE SEGURIDAD\n"
                                     + "El espacio #" + occupiedSpace + " está ocupado por un cliente con DISCAPACIDAD.\n"
                                     + "No puede convertir este bloque en 'No Preferencial' mientras el vehículo esté dentro.");
                         }
@@ -269,35 +261,28 @@ public class ParkingController {
         if (parkingName == null) {
             return;
         }
-
         int occupiedPrefs = getOccupiedPreferentialCount(parkingName);
-
         if (newPrefQuota < occupiedPrefs) {
             throw new Exception("No puede reducir los espacios preferenciales a " + newPrefQuota
                     + " porque actualmente hay " + occupiedPrefs + " vehículos preferenciales parqueados.");
         }
     }
 
-    public List<String[]> getFilteredParkingSummary(User user) throws Exception { 
+    public List<String[]> getFilteredParkingSummary(User user) throws Exception {
         List<String[]> summary = new ArrayList<>();
         List<String> lines = fileManager.readAllParkingLines();
-
         for (String line : lines) {
             if (line.trim().isEmpty()) {
                 continue;
             }
-
             String[] data = line.split("\\|");
             String name = data[0];
-
             boolean isAdmin = user.getRole().equalsIgnoreCase("ADMIN");
             boolean isAssignedSede = user.getAssignedParking().equalsIgnoreCase(name);
-
             if (isAdmin || isAssignedSede) {
                 String total = data[1];
                 String pref = data[2];
                 int regular = Integer.parseInt(total) - Integer.parseInt(pref);
-
                 summary.add(new String[]{
                     name.toUpperCase(),
                     total + " espacios",
@@ -308,26 +293,25 @@ public class ParkingController {
         }
         return summary;
     }
-    
-    public List<String[]> getDetailedSpaceConfig(String parkingName) throws Exception {
-    List<String[]> details = new ArrayList<>();
-    // Intentamos leer el archivo específico: Nombre_config.txt
-    String fileName = parkingName + "_config.txt";
-    List<String> lines = fileManager.readLinesFromFile(fileName);
 
-    for (String line : lines) {
-        if (line.trim().isEmpty()) continue;
-        String[] data = line.split("\\|"); // Formato: numero|tipo|esPreferencial
-        
-        if (data.length >= 3) {
-            String status = data[2].equalsIgnoreCase("true") ? "PREFERENCIAL" : "REGULAR";
-            details.add(new String[]{
-                "Espacio #" + data[0],
-                data[1].toUpperCase(), 
-                status
-            });
+    public List<String[]> getDetailedSpaceConfig(String parkingName) throws Exception {
+        List<String[]> details = new ArrayList<>();
+        String fileName = parkingName + "_config.txt";
+        List<String> lines = fileManager.readLinesFromFile(fileName);
+        for (String line : lines) {
+            if (line.trim().isEmpty()) {
+                continue;
+            }
+            String[] data = line.split("\\|");
+            if (data.length >= 3) {
+                String status = data[2].equalsIgnoreCase("true") ? "PREFERENCIAL" : "REGULAR";
+                details.add(new String[]{
+                    "Espacio #" + data[0],
+                    data[1].toUpperCase(),
+                    status
+                });
+            }
         }
+        return details;
     }
-    return details;
-}
 }

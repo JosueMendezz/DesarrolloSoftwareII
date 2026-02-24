@@ -81,7 +81,6 @@ public class FileManager {
     }
 
     public void updateRates(List<String> newRates) throws IOException {
-        // Esto sobreescribe el rates.txt con los nuevos valores del Admin
         Files.write(Paths.get("rates.txt"), newRates,
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }

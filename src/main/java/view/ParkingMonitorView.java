@@ -22,7 +22,6 @@ public class ParkingMonitorView extends JPanel {
     private final Color COLOR_ACCENTO = new Color(35, 35, 35);
     private final Color COLOR_CELESTE = new Color(0, 191, 255);
     private final Color COLOR_GRIS_MATE = new Color(45, 45, 45);
-
     private final VehicleController vehicleController;
     private final User currentUser;
     private JTextField txtSearchSpace;
@@ -42,60 +41,40 @@ public class ParkingMonitorView extends JPanel {
         this.setLayout(new BorderLayout(10, 10));
         this.setBackground(COLOR_FONDO);
         this.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-
-        // --- PANEL NORTE: CONTROL OPERATIVO ---
         JPanel pnlNorth = new JPanel(new BorderLayout());
         pnlNorth.setOpaque(false);
-
-        // Grupo Filtros con etiquetas estilizadas
         JPanel pnlLeft = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         pnlLeft.setOpaque(false);
-
         cbParkings = new JComboBox<>();
         styleComboBox(cbParkings);
-
         txtSearchSpace = new JTextField(8);
         styleTextField(txtSearchSpace);
-
         btnSearch = new JButton("Filtrar");
         styleButton(btnSearch, false);
-
         btnRefresh = new JButton("<>");
         styleButton(btnRefresh, false);
-
         pnlLeft.add(createLabel("SEDE:"));
         pnlLeft.add(cbParkings);
         pnlLeft.add(createLabel("ESPACIO:"));
         pnlLeft.add(txtSearchSpace);
         pnlLeft.add(btnSearch);
         pnlLeft.add(btnRefresh);
-
-        // Grupo Acciones
         JPanel pnlRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
         pnlRight.setOpaque(false);
-
         btnDetails = new JButton("Ver Detalles");
         styleButton(btnDetails, false);
-
         btnCheckout = new JButton("Retirar y Cobrar");
         styleButton(btnCheckout, true);
-
         pnlRight.add(btnDetails);
         pnlRight.add(btnCheckout);
-
         pnlNorth.add(pnlLeft, BorderLayout.WEST);
         pnlNorth.add(pnlRight, BorderLayout.EAST);
-
-        // --- PANEL CENTRAL: TABLA ---
         setupTable();
-
         this.add(pnlNorth, BorderLayout.NORTH);
-
         JScrollPane scrollPane = new JScrollPane(tblMonitor);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60)));
         scrollPane.getViewport().setBackground(COLOR_FONDO);
         this.add(scrollPane, BorderLayout.CENTER);
-
         setupListeners();
     }
 
@@ -113,13 +92,8 @@ public class ParkingMonitorView extends JPanel {
             }
         });
         btnRefresh.addActionListener(e -> handleResetView());
-
-        // REQUERIMIENTO C: Botón de Detalles
         btnDetails.addActionListener(e -> handleViewDetails());
-
-        // REQUERIMIENTO B: Lógica de Cobro y History
         btnCheckout.addActionListener(e -> handleCheckout());
-
         cbParkings.addActionListener(e -> refreshTableData());
     }
 
@@ -131,40 +105,28 @@ public class ParkingMonitorView extends JPanel {
         }
 
         String placa = tableModel.getValueAt(row, 1).toString();
-
-        // 1. Obtenemos el HTML del controlador
         String htmlContent = vehicleController.getFullVehicleInfo(placa);
-
-        // 2. Crear el Diálogo personalizado
-        JDialog detailsDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Expediente: " + placa, true);
+        JDialog detailsDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Detalles del Vehículo: ", true);
         detailsDialog.setSize(450, 600);
         detailsDialog.setLocationRelativeTo(this);
         detailsDialog.getContentPane().setBackground(new Color(30, 30, 30));
-
-        // 3. Usar un JEditorPane para renderizar el HTML
         JEditorPane infoPane = new JEditorPane();
         infoPane.setContentType("text/html");
         infoPane.setText(htmlContent);
         infoPane.setEditable(false);
         infoPane.setOpaque(false);
         infoPane.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        // 4. Botón de cierre 
-        JButton btnClose = new JButton("Cerrar Expediente");
+        JButton btnClose = new JButton("Cerrar");
         btnClose.setBackground(new Color(33, 150, 243));
         btnClose.setForeground(Color.WHITE);
         btnClose.setFocusPainted(false);
         btnClose.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         btnClose.addActionListener(e -> detailsDialog.dispose());
-
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         btnPanel.setOpaque(false);
         btnPanel.add(btnClose);
-
-        // Ensamblar
         detailsDialog.add(new JScrollPane(infoPane), BorderLayout.CENTER);
         detailsDialog.add(btnPanel, BorderLayout.SOUTH);
-
         detailsDialog.setVisible(true);
     }
 
@@ -180,7 +142,7 @@ public class ParkingMonitorView extends JPanel {
             } else {
                 String sedeAsignada = currentUser.getAssignedParking();
                 cbParkings.addItem(sedeAsignada);
-                cbParkings.setEnabled(false); // Bloqueamos para que no cambie de sede
+                cbParkings.setEnabled(false);
             }
 
         } catch (Exception e) {
@@ -201,32 +163,19 @@ public class ParkingMonitorView extends JPanel {
             List<Object[]> rows = vehicleController.getParkedVehiclesStatus(selected, spaceCriteria);
 
             for (Object[] raw : rows) {
-                Object[] reorderedRow = new Object[7]; // Las 7 columnas de la tabla
-
-                // raw[0] = space | raw[1] = placa | raw[2] = ownerName | raw[3] = modelo 
-                // raw[4] = marca | raw[5] = tipo | raw[6] = tarifa | raw[7] = entrada
-                reorderedRow[0] = raw[0];  // Espacio
-                reorderedRow[1] = raw[1];  // Placa
-                reorderedRow[2] = raw[2];  // Dueño
-                reorderedRow[3] = raw[5];  // Tipo (Automóvil/Moto)
-
-                // 1. PREFERENCIAL: Como el controlador no lo envía en este método, 
-                // lo dejamos en "NO" por defecto 
+                Object[] reorderedRow = new Object[7];
+                reorderedRow[0] = raw[0];
+                reorderedRow[1] = raw[1];
+                reorderedRow[2] = raw[2];
+                reorderedRow[3] = raw[5];
                 reorderedRow[4] = "NO";
-
-                // 2. ENTRADA: Es el índice 7 del controlador
                 reorderedRow[5] = raw[7];
-
-                // 3. TARIFA: Es el índice 6 del controlador
                 reorderedRow[6] = raw[6];
-
                 tableModel.addRow(reorderedRow);
             }
-
             if (rows.isEmpty() && !spaceCriteria.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "No se encontró ningún vehículo en el espacio: " + spaceCriteria);
             }
-
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error de mapeo: " + e.getMessage());
             e.printStackTrace();
@@ -243,49 +192,34 @@ public class ParkingMonitorView extends JPanel {
         try {
             String placa = tableModel.getValueAt(row, 1).toString();
             String sede = cbParkings.getSelectedItem().toString();
-
-            // Buscamos los datos del vehículo en el archivo a través del controller
             List<String[]> todos = vehicleController.getFileManager().loadAllParkedVehicles();
             String[] v = todos.stream()
                     .filter(veh -> veh[0].equalsIgnoreCase(placa))
                     .findFirst()
                     .orElseThrow(() -> new Exception("Vehículo no encontrado."));
-
-            // v[1] es tipo, v[8] es ownerId, v[11] es hora entrada, v[10] es espacio
             double tarifa = vehicleController.calculateAmount(v[11], 0);
             double monto = vehicleController.calculateFinalPrice(placa, sede);
             String cliente = vehicleController.findCustomerById(v[8]).getName();
-
-            // 2. Pasamos todo al ticket
             showTicketAndProcess(placa, monto, sede, cliente, v[11], v[10], v[1]);
-
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error en cobro: " + ex.getMessage());
         }
     }
 
     private void showTicketAndProcess(String plate, double amount, String branch, String customerName, String entryTimeRaw, String spaceId, String vehicleType) {
-        // 1. DATE STANDARDIZATION
-        // Input format from file is "yyyy-MM-dd HH:mm"
-        // Output format for ticket is "dd/MM/yyyy HH:mm"
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
         String formattedEntry;
         try {
             LocalDateTime parsedEntry = LocalDateTime.parse(entryTimeRaw, inputFormatter);
             formattedEntry = parsedEntry.format(outputFormatter);
         } catch (Exception e) {
-            formattedEntry = entryTimeRaw; // Fallback
+            formattedEntry = entryTimeRaw;
         }
 
         String exitTime = LocalDateTime.now().format(outputFormatter);
-
-        // 2. BUSINESS LOGIC
         double hourlyRate = (amount > 0) ? vehicleController.getRateFromFile(vehicleType) : 0;
         int estimatedHours = (int) Math.ceil(amount / (hourlyRate > 0 ? hourlyRate : 1));
-
-        // 3. TICKET UI
         String ticketHtml = String.format(
                 "<html><body style='width: 300px; font-family: sans-serif; padding: 10px;'>"
                 + "<div style='text-align:center;'>"
@@ -340,13 +274,8 @@ public class ParkingMonitorView extends JPanel {
     }
 
     private void handleResetView() {
-        // 1. Limpiar el cuadro de texto del espacio
         txtSearchSpace.setText("");
-
-        // 2. Ejecutar el refresco de datos (ahora traerá todo porque el campo está vacío)
         refreshTableData();
-
-        // 3. Quitar cualquier selección de fila de la tabla
         tblMonitor.clearSelection();
     }
 
@@ -367,8 +296,6 @@ public class ParkingMonitorView extends JPanel {
         tblMonitor.setSelectionBackground(COLOR_CELESTE);
         tblMonitor.setSelectionForeground(COLOR_FONDO);
         tblMonitor.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-
-        // Estilo del encabezado
         tblMonitor.getTableHeader().setBackground(new Color(30, 30, 30));
         tblMonitor.getTableHeader().setForeground(COLOR_CELESTE);
         tblMonitor.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));

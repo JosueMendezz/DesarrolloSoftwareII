@@ -18,13 +18,10 @@ public class RateManagementView extends BaseFrame {
     private final Runnable onUpdateCallback;
 
     public RateManagementView(Frame parent, VehicleController controller, Runnable onUpdateCallback) {
-        super("Heap Haven - Gestión de Tarifas", 600, 520);
+        super("HEAP HAVEN - GESTIÓN DE TARIFAS", 600, 520);
         this.controller = controller;
         this.onUpdateCallback = onUpdateCallback;
-
-        // Configurar barra personalizada de BaseFrame
-        this.setupCustomTitleBar("GESTIÓN DE TARIFAS HORARIAS");
-
+        this.setupCustomTitleBar("HEAP HAVEN - GESTIÓN DE TARIFAS");
         setupContent();
         loadData();
         this.setLocationRelativeTo(parent);
@@ -34,24 +31,17 @@ public class RateManagementView extends BaseFrame {
         JPanel mainContainer = new JPanel(new BorderLayout(20, 20));
         mainContainer.setOpaque(false);
         mainContainer.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
-
-        // Cabecera informativa
         JPanel pnlHeader = new JPanel(new GridLayout(2, 1, 5, 5));
         pnlHeader.setOpaque(false);
-
         JLabel lblTitle = new JLabel("CONFIGURACIÓN DE PRECIOS", JLabel.LEFT);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblTitle.setForeground(COLOR_CELESTE);
-
         JLabel lblHint = new JLabel("Haga doble clic en el monto para editar la tarifa por hora.");
         lblHint.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblHint.setForeground(Color.GRAY);
-
         pnlHeader.add(lblTitle);
         pnlHeader.add(lblHint);
         mainContainer.add(pnlHeader, BorderLayout.NORTH);
-
-        // Tabla con estilo oscuro "Monitor"
         model = new DefaultTableModel(new String[]{"TIPO DE VEHÍCULO", "TARIFA (₡)"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -67,24 +57,17 @@ public class RateManagementView extends BaseFrame {
         scroll.getViewport().setBackground(COLOR_FONDO);
         scroll.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60)));
         mainContainer.add(scroll, BorderLayout.CENTER);
-
-        // Panel de Acciones (Botón Inteligente)
         JPanel pnlSouth = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
         pnlSouth.setOpaque(false);
-
         JButton btnBack = new JButton("Volver");
         JButton btnSave = new JButton("Actualizar Tarifas");
-
         styleButton(btnBack, false);
         styleButton(btnSave, true);
-
         btnBack.addActionListener(e -> handleBackAction());
         btnSave.addActionListener(e -> saveChanges());
-
         pnlSouth.add(btnBack);
         pnlSouth.add(btnSave);
         mainContainer.add(pnlSouth, BorderLayout.SOUTH);
-
         this.add(mainContainer, BorderLayout.CENTER);
     }
 
@@ -181,7 +164,6 @@ public class RateManagementView extends BaseFrame {
         btn.setBorder(BorderFactory.createLineBorder(btn.getBackground().darker()));
     }
 
-    // Editor de celda usando Spinner
     class SpinnerEditor extends AbstractCellEditor implements TableCellEditor {
 
         private final JSpinner spinner = new JSpinner(new SpinnerNumberModel(0, 0, 100000, 50));

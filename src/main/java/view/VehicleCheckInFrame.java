@@ -16,100 +16,72 @@ public class VehicleCheckInFrame extends BaseFrame {
     private final JCheckBox chkIsPreferential = new JCheckBox("Presenta discapacidad");
     private final JButton btnCheckCustomer = new JButton("Buscar ID");
     private final JButton btnRegisterCustomer = new JButton("Guardar nuevo cliente");
-
     private final JTextField txtPlate = new JTextField(10);
     private final JTextField txtBrand = new JTextField(10);
     private final JTextField txtModel = new JTextField(10);
     private final JComboBox<String> comboVehicleType = new JComboBox<>(new String[]{"Automóvil", "Motocicleta", "Bicicleta", "Vehículo Pesado"});
     private final JTextField txtColor = new JTextField(10);
     private final JTextField txtDetails = new JTextField(20);
-
     private final DefaultListModel<String> listModelOthers = new DefaultListModel<>();
     private final JList<String> listOthers = new JList<>(listModelOthers);
     private final JTextField txtOtherName = new JTextField(15);
     private final JButton btnAddOther = new JButton("+");
-
     private final JComboBox<String> comboParking = new JComboBox<>();
     private final JButton btnRegister = new JButton("ingresar vehículo");
     private final JButton btnBack = new JButton("Menú principal");
-
     private final User currentUser;
     private final VehicleController controller;
-
     private boolean isCustomerVerified = false;
     private final JButton btnViewConfig = new JButton("Ver Distribución");
 
     public VehicleCheckInFrame(User user, VehicleController controller) {
-        // 2. Llamada al constructor de BaseFrame
-        super("Check-In de Vehiculos - Heap Haven", 650, 850); // Subimos 50px de alto por la barra
+        super("HEAP HAVEN - CHECK-IN DE VEHÍCULOS", 650, 850);
         this.currentUser = user;
         this.controller = controller;
-
-        // 3. Configurar Layout del JFrame
         getContentPane().setLayout(new BorderLayout());
-
-        // 4. Pintar barra personalizada
-        this.setupCustomTitleBar("Check-In de Vehiculos - Heap Haven");
-
-        // Continuamos con tu lógica
+        this.setupCustomTitleBar("HEAP HAVEN - CHECK-IN DE VEHÍCULOS");
         setupComponents();
         setupListeners();
         loadParkingLots();
-
         this.getRootPane().setDefaultButton(btnRegister);
         setVisible(true);
     }
 
     private void setupComponents() {
-        // PANEL PRINCIPAL
         JPanel contentScrollable = new JPanel();
         contentScrollable.setLayout(new BoxLayout(contentScrollable, BoxLayout.Y_AXIS));
         contentScrollable.setBackground(COLOR_FONDO);
         contentScrollable.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
-
-        // --- ESTILO DE LOS TITLED BORDERS ---
         TitledBorder customerBorder = BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(70, 70, 70), 1), " CREDENCIALES DEL CLIENTE ");
         customerBorder.setTitleColor(COLOR_CELESTE);
         customerBorder.setTitleFont(new Font("Segoe UI", Font.BOLD, 12));
-
         TitledBorder vehicleBorder = BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(70, 70, 70), 1), " ESPECIFICACIONES DEL VEHÍCULO ");
         vehicleBorder.setTitleColor(COLOR_CELESTE);
-
-        // --- APLICAR ESTILOS A COMPONENTES INDIVIDUALES ---
-        // Cliente
         styleTextField(txtOwnerId);
         styleTextField(txtOwnerName);
         styleCheckBox(chkIsPreferential);
         styleButton(btnCheckCustomer, false);
         styleButton(btnRegisterCustomer, false);
         styleButton(btnViewConfig, false);
-
-        // Vehículo
         styleTextField(txtPlate);
         styleTextField(txtBrand);
         styleTextField(txtModel);
         styleTextField(txtColor);
         styleTextField(txtDetails);
         styleComboBox(comboVehicleType);
-
-        // Responsables y Footer
         styleTextField(txtOtherName);
         styleButton(btnAddOther, false);
         styleButton(btnBack, false);
         styleButton(btnRegister, true);
         styleComboBox(comboParking);
-
-        // --- SECCIÓN CLIENTE (PnlCustomer) ---
         JPanel pnlCustomer = new JPanel(new GridBagLayout());
         pnlCustomer.setOpaque(false);
         pnlCustomer.setBorder(BorderFactory.createCompoundBorder(customerBorder, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
-
         gbc.gridx = 0;
         gbc.gridy = 0;
         pnlCustomer.add(createLabel("ID CLIENTE:"), gbc);
@@ -117,14 +89,12 @@ public class VehicleCheckInFrame extends BaseFrame {
         pnlCustomer.add(txtOwnerId, gbc);
         gbc.gridx = 2;
         pnlCustomer.add(btnCheckCustomer, gbc);
-
         gbc.gridx = 0;
         gbc.gridy = 1;
         pnlCustomer.add(createLabel("NOMBRE COMPLETO:"), gbc);
         gbc.gridx = 1;
         gbc.gridwidth = 2;
         pnlCustomer.add(txtOwnerName, gbc);
-
         gbc.gridwidth = 1;
         gbc.gridy = 2;
         gbc.gridx = 0;
@@ -133,24 +103,19 @@ public class VehicleCheckInFrame extends BaseFrame {
         pnlCustomer.add(chkIsPreferential, gbc);
         gbc.gridx = 2;
         pnlCustomer.add(btnRegisterCustomer, gbc);
-
-        // --- SECCIÓN VEHÍCULO (pnlVehicle) ---
         JPanel pnlVehicle = new JPanel(new GridBagLayout());
         pnlVehicle.setOpaque(false);
         pnlVehicle.setBorder(BorderFactory.createCompoundBorder(vehicleBorder, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-
         gbc.gridx = 0;
         gbc.gridy = 0;
         pnlVehicle.add(createLabel("PLACA:"), gbc);
         gbc.gridx = 1;
         pnlVehicle.add(txtPlate, gbc);
-
         gbc.gridx = 0;
         gbc.gridy = 1;
         pnlVehicle.add(createLabel("TIPO:"), gbc);
         gbc.gridx = 1;
         pnlVehicle.add(comboVehicleType, gbc);
-
         gbc.gridx = 0;
         gbc.gridy = 2;
         pnlVehicle.add(createLabel("MARCA / MODELO:"), gbc);
@@ -160,42 +125,33 @@ public class VehicleCheckInFrame extends BaseFrame {
         pnlBrandModel.add(txtModel);
         gbc.gridx = 1;
         pnlVehicle.add(pnlBrandModel, gbc);
-
         gbc.gridx = 0;
         gbc.gridy = 3;
         pnlVehicle.add(createLabel("COLOR:"), gbc);
         gbc.gridx = 1;
         pnlVehicle.add(txtColor, gbc);
-
         gbc.gridx = 0;
         gbc.gridy = 4;
         pnlVehicle.add(createLabel("DETALLES (OPCIONAL):"), gbc);
         gbc.gridx = 1;
         pnlVehicle.add(txtDetails, gbc);
-        // --- SECCIÓN RESPONSABLES ---
         JPanel pnlOthers = new JPanel(new BorderLayout(5, 5));
         pnlOthers.setOpaque(false);
         TitledBorder othersBorder = BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(70, 70, 70)), " OTROS AUTORIZADOS A RETIRAR EL VEHÍCULO ");
         othersBorder.setTitleColor(Color.GRAY);
         pnlOthers.setBorder(BorderFactory.createCompoundBorder(othersBorder, BorderFactory.createEmptyBorder(5, 10, 10, 10)));
-
-        // Panel de entrada (Texto + Botón)
         JPanel pnlInputOther = new JPanel(new BorderLayout(5, 0));
         pnlInputOther.setOpaque(false);
         pnlInputOther.add(txtOtherName, BorderLayout.CENTER);
         pnlInputOther.add(btnAddOther, BorderLayout.EAST);
-
         listOthers.setBackground(COLOR_ACCENTO);
         listOthers.setForeground(Color.WHITE);
         JScrollPane scrollOthers = new JScrollPane(listOthers);
         scrollOthers.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60)));
         scrollOthers.setPreferredSize(new Dimension(0, 80));
-
         pnlOthers.add(pnlInputOther, BorderLayout.NORTH);
         pnlOthers.add(scrollOthers, BorderLayout.CENTER);
-
-        // --- FOOTER ---
         JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 20));
         pnlFooter.setOpaque(false);
         pnlFooter.add(btnBack);
@@ -203,15 +159,12 @@ public class VehicleCheckInFrame extends BaseFrame {
         pnlFooter.add(comboParking);
         pnlFooter.add(btnViewConfig);
         pnlFooter.add(btnRegister);
-
-        // Ensamblaje
         contentScrollable.add(pnlCustomer);
         contentScrollable.add(Box.createRigidArea(new Dimension(0, 15)));
         contentScrollable.add(pnlVehicle);
         contentScrollable.add(Box.createRigidArea(new Dimension(0, 15)));
         contentScrollable.add(pnlOthers);
         contentScrollable.add(pnlFooter);
-
         JScrollPane mainScroll = new JScrollPane(contentScrollable);
         mainScroll.setBorder(null);
         mainScroll.getVerticalScrollBar().setUnitIncrement(16);
@@ -328,12 +281,9 @@ public class VehicleCheckInFrame extends BaseFrame {
 
     private void handleVehicleEntry() {
         try {
-            // 1. VALIDACIÓN DE SEGURIDAD
             if (!isCustomerVerified) {
-                throw new Exception("Seguridad: El cliente no ha sido verificado.\nUse 'Buscar ID' o 'Guardar nuevo cliente' antes de continuar.");
+                throw new Exception("El cliente no ha sido verificado.\nUse 'Buscar ID' o 'Guardar nuevo cliente' antes de continuar.");
             }
-
-            // 2. RECOLECCIÓN DE DATOS
             String ownerId = txtOwnerId.getText().trim();
             String plate = txtPlate.getText().trim();
             String brand = txtBrand.getText().trim();
@@ -342,8 +292,6 @@ public class VehicleCheckInFrame extends BaseFrame {
             String parkingName = (String) comboParking.getSelectedItem();
             String selectedType = (String) comboVehicleType.getSelectedItem();
             boolean isClientPreferential = chkIsPreferential.isSelected();
-
-            // 3. VALIDACIÓN DE CAMPOS OBLIGATORIOS (Dinámica)
             StringBuilder missingFields = new StringBuilder();
             if (plate.isEmpty()) {
                 missingFields.append("- Placa\n");
@@ -364,30 +312,22 @@ public class VehicleCheckInFrame extends BaseFrame {
             if (missingFields.length() > 0) {
                 throw new Exception("Los siguientes campos son obligatorios:\n" + missingFields.toString());
             }
-
-            // 4. VERIFICAR SI YA ESTÁ PARQUEADO
             if (controller.isVehicleAlreadyParked(plate)) {
                 showErrorMessage("El vehículo con placa " + plate + " ya se encuentra en el sistema.");
                 return;
             }
-
-            // 5. PROCESAR RESPONSABLES ADICIONALES
             List<String> extraResponsibles = new ArrayList<>();
             for (int i = 0; i < listModelOthers.size(); i++) {
                 extraResponsibles.add(listModelOthers.getElementAt(i));
             }
-
-            // 6. EJECUTAR INGRESO
             int assignedSpace = controller.processVehicleEntry(
                     parkingName, plate, selectedType,
                     brand, model, color,
                     txtDetails.getText().trim(), isClientPreferential,
                     extraResponsibles, ownerId
             );
-
-            // 7. RESULTADO
             if (assignedSpace != -1) {
-                showInfoMessage("¡Vehículo ingresado con éxito!\nEspacio asignado: " + assignedSpace);
+                showInfoMessage("Vehículo ingresado con éxito\nEspacio asignado: " + assignedSpace);
                 clearFields();
                 txtPlate.requestFocus();
             } else {
@@ -440,7 +380,6 @@ public class VehicleCheckInFrame extends BaseFrame {
         }
     }
 
-    // Metodo de estilo 
     private JLabel createLabel(String text) {
         JLabel lbl = new JLabel(text);
         lbl.setForeground(new Color(180, 180, 180));
@@ -476,7 +415,6 @@ public class VehicleCheckInFrame extends BaseFrame {
     }
 
     private void styleComboBox(JComboBox<?> cb) {
-        // Definimos el gris mate que quieres para el campo (un poco más claro que el fondo)
         Color grisMate = new Color(45, 45, 45);
 
         cb.setBackground(grisMate);
@@ -484,21 +422,16 @@ public class VehicleCheckInFrame extends BaseFrame {
         cb.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         cb.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
         cb.setFocusable(false);
-
-        // 1. RENDERIZADOR PERSONALIZADO: Controla la lista desplegable y el texto visible
         cb.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
                     int index, boolean isSelected, boolean cellHasFocus) {
 
                 JLabel lbl = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
-                // Si el index es -1, es el texto que se muestra cuando el combo está cerrado
                 if (index == -1) {
                     lbl.setBackground(grisMate);
                     lbl.setForeground(Color.WHITE);
                 } else {
-                    // Colores de la lista desplegable
                     if (isSelected) {
                         lbl.setBackground(COLOR_CELESTE);
                         lbl.setForeground(COLOR_FONDO);
@@ -512,8 +445,6 @@ public class VehicleCheckInFrame extends BaseFrame {
                 return lbl;
             }
         });
-
-        // 2. UI PERSONALIZADA: Para quitar el botón feo de Windows y poner uno minimalista
         cb.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
             @Override
             protected JButton createArrowButton() {
@@ -527,7 +458,6 @@ public class VehicleCheckInFrame extends BaseFrame {
                 return button;
             }
 
-            // Esto fuerza a que el fondo del ComboBox siempre sea el que definimos
             @Override
             public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
                 g.setColor(grisMate);

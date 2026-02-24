@@ -182,7 +182,7 @@ public class VehicleController {
         long minutes = java.time.Duration.between(entryTime, LocalDateTime.now()).toMinutes();
         double hours = Math.ceil(minutes / 60.0);
         if (hours <= 0) {
-            hours = 1; // Cobrar al menos la primera hora
+            hours = 1; 
         }
         return hours * hourlyRate;
     }
@@ -197,19 +197,14 @@ public class VehicleController {
     }
 
     public double calculateFinalPrice(String plate, String parkingName) throws Exception {
-        // 1. Buscar el vehículo en el archivo de ocupación
         List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
         String[] vehicleData = allVehicles.stream()
                 .filter(v -> v[0].equalsIgnoreCase(plate))
                 .findFirst()
                 .orElseThrow(() -> new Exception("Vehículo no encontrado en el sistema."));
-
         String type = vehicleData[1];
         String entryTimeStr = vehicleData[11];
-
-        // 2. Obtener la tarifa usando el método que ya lee el archivo
         double hourlyRate = getRateFromFile(type);
-
         return calculateAmount(entryTimeStr, hourlyRate);
     }
 
@@ -218,7 +213,6 @@ public class VehicleController {
             List<String> lines = fileManager.readLinesFromFile("rates.txt");
             for (String line : lines) {
                 String[] parts = line.split("\\|");
-                // Comparamos ignorando mayúsculas y espacios extra
                 if (parts[0].trim().equalsIgnoreCase(type.trim())) {
                     return Double.parseDouble(parts[1]);
                 }
@@ -226,8 +220,6 @@ public class VehicleController {
         } catch (Exception e) {
             System.err.println("Error leyendo tarifas: " + e.getMessage());
         }
-
-        // Backup de emergencia
         String t = type.toLowerCase();
         if (t.contains("auto")) {
             return 1000.0;
@@ -242,17 +234,15 @@ public class VehicleController {
             return 2000.0;
         }
 
-        return 1000.0; // Default 
+        return 1000.0; 
     }
 
     public void finalizeTransaction(String plate, double amount, String operator, String parkingName) throws Exception {
-        // 1. Recuperar toda la información del vehículo antes de borrarlo
         List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
         String[] v = allVehicles.stream()
                 .filter(veh -> veh[0].equalsIgnoreCase(plate))
                 .findFirst()
                 .orElseThrow(() -> new Exception("Error crítico: Vehículo no encontrado al finalizar transacción."));
-        // 2. Preparar los datos extendidos
         String exitTime = LocalDateTime.now().format(formatter);
         String entryTime = v[11];
         String ownerId = v[8];
@@ -261,26 +251,20 @@ public class VehicleController {
         String space = v[10];
         String isPreferential = v[6].equalsIgnoreCase("true") ? "PREFERENCIAL" : "REGULAR";
         double appliedRate = getRateFromFile(type); 
-
-        // 3. Crear la línea de historial 
         StringBuilder sb = new StringBuilder();
-        sb.append(exitTime).append("|") // Hora de salida
-                .append(plate).append("|") // Placa
-                .append(ownerId).append("|") // ID Cliente
-                .append(type).append("|") // Tipo vehículo
-                .append(brandModel).append("|") // Marca y Modelo
-                .append(space).append("|") // Espacio físico
-                .append(isPreferential).append("|") // Si fue preferencial
-                .append(entryTime).append("|") // Hora de entrada
-                .append(appliedRate).append("|") // Precio x hora
-                .append(String.format("%.2f", amount)).append("|") // Total cobrado
-                .append(operator).append("|") // Quien cobró
-                .append(parkingName);                // En qué sucursal
-
-        // 4. Guardar en history.txt
+        sb.append(exitTime).append("|") 
+                .append(plate).append("|") 
+                .append(ownerId).append("|") 
+                .append(type).append("|") 
+                .append(brandModel).append("|")
+                .append(space).append("|") 
+                .append(isPreferential).append("|") 
+                .append(entryTime).append("|") 
+                .append(appliedRate).append("|")
+                .append(String.format("%.2f", amount)).append("|") 
+                .append(operator).append("|") 
+                .append(parkingName);                
         fileManager.appendToFile("history.txt", sb.toString());
-
-        // 5. Liberar el espacio (Eliminar de vehicles.txt)
         processPayment(plate);
     }
 
@@ -288,27 +272,17 @@ public class VehicleController {
         try {
             List<String[]> allVehicles = fileManager.loadAllParkedVehicles();
             for (String[] v : allVehicles) {
-                // Estructura del array v según tu processVehicleEntry:
-                // [0]placa, [1]tipo, [2]marca, [3]modelo, [4]color, [5]detalles, 
-                // [6]preferencial, [7]extras, [8]ownerId, [9]sede, [10]espacio, [11]entrada
-
                 if (v[0].equalsIgnoreCase(plate)) {
                     String ownerName = getCustomerName(v[8]);
                     double rate = getRateFromFile(v[1]);
-
-                    // Formatear autorizados
                     String autorizados = v[7].replace(";", ", ");
                     if (autorizados.equalsIgnoreCase("None") || autorizados.isEmpty()) {
                         autorizados = "<i>No se registraron responsables adicionales</i>";
                     }
-
-                    // Determinar etiqueta de espacio preferencial
                     String prefStatus = v[6].equalsIgnoreCase("true")
                             ? "<b style='color: #FF5252;'> SÍ (Preferencial)</b>" : "No";
-
-                    // Retorno con formato HTML para "Visión Empresarial"
                     return "<html><body style='width: 300px; font-family: sans-serif;'>"
-                            + "<h2 style='color: #2196F3; border-bottom: 1px solid #ccc;'>EXPEDIENTE: " + v[0] + "</h2>"
+                            + "<h2 style='color: #2196F3; border-bottom: 1px solid #ccc;'>PLACA DEL VEHÍCULO: " + v[0] + "</h2>"
                             + "<b>--- INFORMACIÓN DEL CLIENTE ---</b><br>"
                             + "<b>Dueño:</b> " + ownerName + "<br>"
                             + "<b>ID Propietario:</b> " + v[8] + "<br><br>"
@@ -356,7 +330,6 @@ public class VehicleController {
     }
 
     public void updateAllRates(List<String> updatedLines) throws IOException {
-        // Usamos el fileManager que ya tienes para sobreescribir el archivo con la nueva lista
         fileManager.saveLinesToFile("rates.txt", updatedLines);
     }
 }

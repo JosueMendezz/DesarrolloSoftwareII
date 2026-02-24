@@ -23,7 +23,7 @@ public class SpaceConfigFrame extends BaseFrame {
     private final String oldName;
 
     public SpaceConfigFrame(ParkingController controller, User user, String originalName) {
-        super("Heap Haven - Configuración de Espacios", 500, 500);
+        super("HEAP HAVEN - CONFIGURACIÓN DE ESPACIOS", 500, 500);
         this.controller = controller;
         this.currentUser = user;
         this.oldName = originalName;
@@ -43,27 +43,19 @@ public class SpaceConfigFrame extends BaseFrame {
         JPanel mainContent = new JPanel(new BorderLayout(15, 15));
         mainContent.setOpaque(false);
         mainContent.setBorder(BorderFactory.createEmptyBorder(25, 30, 25, 30));
-
-        // Panel de información superior
         JPanel infoPanel = new JPanel(new BorderLayout());
         infoPanel.setOpaque(false);
         infoPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(60, 60, 60)),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
-
         lblRemaining.setForeground(Color.WHITE);
         lblRemaining.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         infoPanel.add(lblRemaining, BorderLayout.CENTER);
-
-        // Formulario central
         JPanel panelForm = new JPanel(new GridLayout(3, 1, 20, 20));
         panelForm.setOpaque(false);
         panelForm.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-
         panelForm.add(createFieldGroup("CANTIDAD DE ESPACIOS A ASIGNAR", comboQtyToConfig));
-
-        // Estilo especial para el Checkbox
         chkIsPreferential.setOpaque(false);
         chkIsPreferential.setForeground(COLOR_CELESTE);
         chkIsPreferential.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -71,22 +63,16 @@ public class SpaceConfigFrame extends BaseFrame {
         panelForm.add(chkIsPreferential);
 
         panelForm.add(createFieldGroup("TIPO DE VEHÍCULO ADMITIDO", comboVehicleType));
-
         mainContent.add(infoPanel, BorderLayout.NORTH);
         mainContent.add(panelForm, BorderLayout.CENTER);
-
-        // Panel de Navegación
         JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         panelButtons.setOpaque(false);
-
         styleButton(btnExit, false);
         styleButton(btnBack, false);
         styleButton(btnFinish, true);
-
         panelButtons.add(btnExit);
         panelButtons.add(btnBack);
         panelButtons.add(btnFinish);
-
         mainContent.add(panelButtons, BorderLayout.SOUTH);
         getContentPane().add(mainContent, BorderLayout.CENTER);
     }
@@ -113,13 +99,10 @@ public class SpaceConfigFrame extends BaseFrame {
 
             int totalCap = controller.getTempParking().getNumberOfSpaces();
             int remaining = controller.getRemainingSpaces();
-
-            // Lógica de rangos para validación de edición
             int startRange = (totalCap - remaining) + 1;
             int endRange = startRange + qty - 1;
 
             if (oldName != null) {
-                // Validación crítica: Verifica si los espacios ya están ocupados en el archivo real
                 controller.validateSpaceBlockIsFree(oldName, startRange, endRange, type, isPref);
             }
 
@@ -196,14 +179,11 @@ public class SpaceConfigFrame extends BaseFrame {
         JLabel lbl = new JLabel(labelText);
         lbl.setForeground(new Color(150, 150, 150));
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
-
-        // Estilo del combo
         combo.setBackground(COLOR_ACCENTO);
         combo.setForeground(Color.WHITE);
         combo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         ((JLabel) combo.getRenderer()).setHorizontalAlignment(SwingConstants.LEFT);
         combo.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
-
         group.add(lbl, BorderLayout.NORTH);
         group.add(combo, BorderLayout.CENTER);
         return group;

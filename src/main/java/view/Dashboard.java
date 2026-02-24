@@ -16,33 +16,24 @@ public class Dashboard extends BaseFrame {
     private BackgroundPanel mainBackground;
 
     public Dashboard(User currentUser, FileManager fileManager) {
-        super("Heap Haven - Menú Principal", 1100, 700);
+        super("HEAP HAVEN - MENÚ PRINCIPAL", 1100, 700);
         this.currentUser = currentUser;
         this.fileManager = fileManager;
 
         getContentPane().setLayout(new BorderLayout());
-
-        // 1. PANEL SUPERIOR (Barra Título + Menú)
         JPanel headerContainer = new JPanel(new BorderLayout());
         headerContainer.setBackground(COLOR_BARRA_TITULO);
-
-        // Barra de título
         this.setupCustomTitleBar("HEAP HAVEN PARKING SYSTEM - " + currentUser.getRole());
-
         Component titleBar = ((BorderLayout) getContentPane().getLayout()).getLayoutComponent(BorderLayout.NORTH);
+
         if (titleBar != null) {
             headerContainer.add(titleBar, BorderLayout.NORTH);
         }
-
-        // Menú de navegación justo debajo
         setupMenuBarAsComponent(headerContainer);
         getContentPane().add(headerContainer, BorderLayout.NORTH);
-
-        // 2. CONTENIDO CENTRAL
         setupBackground();
         setupTabs();
         setupFloatingWelcome();
-
         setVisible(true);
     }
 
@@ -55,8 +46,6 @@ public class Dashboard extends BaseFrame {
     private void setupTabs() {
         tabbedPane = new JTabbedPane();
         controller.VehicleController vehicleController = new controller.VehicleController(fileManager);
-
-        // --- ESTILO DE PESTAÑAS ---
         tabbedPane.setOpaque(false);
         tabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 13));
         tabbedPane.setUI(new javax.swing.plaf.basic.BasicTabbedPaneUI() {
@@ -80,19 +69,13 @@ public class Dashboard extends BaseFrame {
                 }
             }
         });
-
-        // Paneles de las pestañas
         JPanel welcomePanel = new JPanel();
         welcomePanel.setOpaque(false);
-
         ParkingMonitorView monitorTab = new ParkingMonitorView(vehicleController, currentUser);
         monitorTab.setOpaque(false);
-
         tabbedPane.addTab("INICIO", welcomePanel);
         tabbedPane.addTab("MONITOR DE PARQUEOS", monitorTab);
-
         tabbedPane.setBounds(20, 20, 1060, 500);
-
         customizeTabTitles();
         mainBackground.add(tabbedPane);
     }
@@ -102,22 +85,14 @@ public class Dashboard extends BaseFrame {
         menuBar.setBackground(COLOR_BARRA_TITULO);
         menuBar.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 5));
         menuBar.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(50, 50, 50)));
-
-        // Estilo  para los menús
         JMenu systemMenu = createMenu("SISTEMA");
         JMenu operationsMenu = createMenu("OPERACIONES");
-
-        // --- SISTEMA ---
         JMenuItem logoutItem = createMenuItem("Cerrar Sesión");
         logoutItem.addActionListener(e -> handleLogout());
         systemMenu.add(logoutItem);
-
-        // --- OPERACIONES ---
         operationsMenu.add(createMenuItem("Gestión de Clientes")).addActionListener(e -> openCustomerManagement());
         operationsMenu.add(createMenuItem("Ingreso de Vehículos")).addActionListener(e -> openVehicleCheckIn());
-
-        // --- REPORTE LOCAL ---
-        JMenuItem reportItem = createMenuItem("Generar Reporte de Sede");
+        JMenuItem reportItem = createMenuItem("Generar Reporte");
         reportItem.addActionListener(e -> {
             ReportSelectionDialog dialog = new ReportSelectionDialog(this, currentUser, fileManager);
             dialog.setVisible(true);

@@ -13,23 +13,16 @@ public class LoginFrame extends BaseFrame {
     private final JButton btnExit;
 
     public LoginFrame() {
-        super("Heap Haven - Control de Acceso", 420, 450);
+        super("HEAP HAVEN - SISTEMA DE GESTIÓN", 420, 450);
 
         getContentPane().setLayout(new BorderLayout());
-
-        // 1. Barra de título personalizada (Heredada)
-        this.setupCustomTitleBar("SISTEMA DE GESTIÓN J-NODE");
-
-        // 2. Panel Principal con el fondo de BaseFrame
+        this.setupCustomTitleBar("HEAP HAVEN - SISTEMA DE GESTIÓN");
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setOpaque(false);
         mainPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 5, 8, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        // 3. Logo o Título Superior
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
@@ -37,52 +30,35 @@ public class LoginFrame extends BaseFrame {
         lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
         lblLogo.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         mainPanel.add(lblLogo, gbc);
-
-        // 4. Campos de Texto
         gbc.gridwidth = 1;
-
-        // Usuario
         gbc.gridy = 1;
         gbc.gridx = 0;
         mainPanel.add(createLabel("USUARIO:"), gbc);
-
         gbc.gridx = 1;
         txtUsername = createStyledTextField();
         mainPanel.add(txtUsername, gbc);
-
-        // Contraseña
         gbc.gridy = 2;
         gbc.gridx = 0;
         mainPanel.add(createLabel("CONTRASEÑA:"), gbc);
-
         gbc.gridx = 1;
         txtPassword = createStyledPasswordField();
         mainPanel.add(txtPassword, gbc);
-
-        // 5. Botones usando los métodos de BaseFrame
         gbc.gridx = 0;
         gbc.gridy = 3;
         gbc.gridwidth = 2;
         gbc.insets = new Insets(25, 5, 10, 5);
-
-        // Botón Ingresar (Resaltado en Celeste)
         btnLogin = createStyledButton("Ingresar al Sistema", true);
         mainPanel.add(btnLogin, gbc);
-
-        // Botón Salir (Gris Mate)
         gbc.gridy = 4;
         gbc.insets = new Insets(0, 5, 10, 5);
         btnExit = createStyledButton("Cerrar Aplicación", false);
         btnExit.addActionListener(e -> handleExit());
         mainPanel.add(btnExit, gbc);
-
         getContentPane().add(mainPanel, BorderLayout.CENTER);
-
         this.getRootPane().setDefaultButton(btnLogin);
         setVisible(true);
     }
 
-    // --- MÉTODOS AUXILIARES PARA MANTENER LA ESTÉTICA ---
     private JLabel createLabel(String text) {
         JLabel lbl = new JLabel(text);
         lbl.setForeground(COLOR_TEXTO);

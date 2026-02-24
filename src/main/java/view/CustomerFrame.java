@@ -18,35 +18,28 @@ public class CustomerFrame extends BaseFrame {
     private final JButton updateButton;
     private final JButton deleteButton;
     private final JButton btnExit;
-
     private JTable customerTable;
     private DefaultTableModel tableModel;
-
     private final User currentUser;
     private final CustomerController controller;
 
     public CustomerFrame(User user, CustomerController controller) {
-        super("Heap Haven - Gestión de Clientes", 700, 600);
+        super("HEAP HAVEN - GESTIÓN DE CLIENTES", 700, 600);
         this.currentUser = user;
         this.controller = controller;
-
         txtId = createStyledTextField();
         txtName = createStyledTextField();
         chkPreferential = new JCheckBox("¿APLICA ESPACIO PREFERENCIAL?");
         styleCheckbox(chkPreferential);
-
         registerButton = createStyledButton("Registrar", true);
         updateButton = createStyledButton("Modificar", false);
         deleteButton = createStyledButton("Eliminar", false);
         btnExit = createStyledButton("Volver", false);
-
         getContentPane().setLayout(new BorderLayout());
-        this.setupCustomTitleBar("ADMINISTRACIÓN DE CLIENTES - HEAP HAVEN");
-
+        this.setupCustomTitleBar("HEAP HAVEN - GESTIÓN DE CLIENTES");
         setupComponents();
         setupListeners();
         initialDataLoad();
-
         this.getRootPane().setDefaultButton(registerButton);
         setVisible(true);
     }
@@ -55,8 +48,6 @@ public class CustomerFrame extends BaseFrame {
         JPanel mainContent = new JPanel(new BorderLayout(15, 15));
         mainContent.setOpaque(false);
         mainContent.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        // --- FORMULARIO IZQUIERDA ---
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setOpaque(false);
         TitledBorder border = BorderFactory.createTitledBorder(
@@ -64,42 +55,31 @@ public class CustomerFrame extends BaseFrame {
         border.setTitleColor(COLOR_CELESTE);
         border.setTitleFont(new Font("Segoe UI", Font.BOLD, 12));
         formPanel.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
-
         gbc.gridx = 0;
         gbc.gridy = 0;
         formPanel.add(createLabel("IDENTIFICACIÓN:"), gbc);
         gbc.gridy = 1;
         formPanel.add(txtId, gbc);
-
         gbc.gridy = 2;
         formPanel.add(createLabel("NOMBRE COMPLETO:"), gbc);
         gbc.gridy = 3;
         formPanel.add(txtName, gbc);
-
         gbc.gridy = 4;
         formPanel.add(chkPreferential, gbc);
-
-        // --- PANEL DE BOTONES ---
         JPanel buttonPanel = new JPanel(new GridLayout(4, 1, 10, 10));
         buttonPanel.setOpaque(false);
         buttonPanel.add(registerButton);
         buttonPanel.add(updateButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(btnExit);
-
-        // Contenedor superior (Form + Botones)
         JPanel topContainer = new JPanel(new BorderLayout(20, 0));
         topContainer.setOpaque(false);
         topContainer.add(formPanel, BorderLayout.CENTER);
         topContainer.add(buttonPanel, BorderLayout.EAST);
-
         mainContent.add(topContainer, BorderLayout.NORTH);
-
-        // --- TABLA ---
         String[] columns = {"ID", "NOMBRE COMPLETO", "PREFERENCIAL"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -108,7 +88,7 @@ public class CustomerFrame extends BaseFrame {
             }
         };
         customerTable = new JTable(tableModel);
-        applyCustomTableStyle(customerTable); // ¡Método Maestro de BaseFrame!
+        applyCustomTableStyle(customerTable);
 
         JScrollPane scrollPane = new JScrollPane(customerTable);
         scrollPane.getViewport().setBackground(COLOR_FONDO);
@@ -234,7 +214,7 @@ public class CustomerFrame extends BaseFrame {
             txtId.setText(tableModel.getValueAt(row, 0).toString());
             txtName.setText(tableModel.getValueAt(row, 1).toString());
             chkPreferential.setSelected(tableModel.getValueAt(row, 2).toString().equals("Si"));
-            txtId.setEditable(false); // 
+            txtId.setEditable(false);
         }
     }
 
@@ -246,7 +226,6 @@ public class CustomerFrame extends BaseFrame {
         customerTable.clearSelection();
     }
 
-    // --- MÉTODOS AUXILIARES DE ESTILO ---
     private JLabel createLabel(String text) {
         JLabel lbl = new JLabel(text);
         lbl.setForeground(COLOR_TEXTO);

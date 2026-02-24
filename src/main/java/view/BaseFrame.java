@@ -22,7 +22,6 @@ public abstract class BaseFrame extends JFrame {
         getContentPane().setBackground(COLOR_FONDO);
     }
 
-    // --- MÉTODOS DE ESTILO REUTILIZABLES ---
     protected JButton createStyledButton(String text, boolean highlighted) {
         JButton btn = new JButton(text.toUpperCase());
         btn.setPreferredSize(new Dimension(180, 40));
@@ -40,7 +39,6 @@ public abstract class BaseFrame extends JFrame {
             btn.setBorder(BorderFactory.createLineBorder(COLOR_CELESTE, 1));
         }
 
-        // Efecto Hover
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
@@ -90,25 +88,18 @@ public abstract class BaseFrame extends JFrame {
         return lbl;
     }
 
-    // --- LÓGICA DE BARRA DE TÍTULO ---
     protected void setupCustomTitleBar(String titleText) {
         JPanel titleBar = new JPanel(new BorderLayout());
         titleBar.setBackground(COLOR_BARRA_TITULO);
         titleBar.setPreferredSize(new Dimension(getWidth(), 35));
-
         JLabel titleLabel = new JLabel("   " + titleText);
         titleLabel.setForeground(new Color(180, 180, 180));
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
         titleBar.add(titleLabel, BorderLayout.WEST);
-
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         buttonPanel.setOpaque(false);
-
-        // BOTÓN 1: MINIMIZAR
         JButton btnMinimize = createTitleBarButton("—");
         btnMinimize.addActionListener(e -> setState(JFrame.ICONIFIED));
-
-        // BOTÓN 2: MAXIMIZAR / RESTAURAR (Corregido)
         JButton btnMaximize = createTitleBarButton("▢");
         btnMaximize.addActionListener(e -> {
             if (getExtendedState() == JFrame.MAXIMIZED_BOTH) {
@@ -117,8 +108,6 @@ public abstract class BaseFrame extends JFrame {
                 setExtendedState(JFrame.MAXIMIZED_BOTH);
             }
         });
-
-        // La "X" eliminada 
         buttonPanel.add(btnMinimize);
         buttonPanel.add(btnMaximize);
 

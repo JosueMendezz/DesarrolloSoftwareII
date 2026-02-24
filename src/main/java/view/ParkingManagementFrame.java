@@ -14,23 +14,19 @@ public class ParkingManagementFrame extends BaseFrame {
     private JTable tblParkings;
     private DefaultTableModel tableModel;
     private JButton btnAdd, btnUpdate, btnDelete, btnVisualize, btnBack;
-
     private final User currentUser;
     private final ParkingController controller;
 
     public ParkingManagementFrame(User user, ParkingController controller) {
-        super("Heap Haven - Administración de parqueos", 900, 600);
+        super("HEAP HAVEN - ADMINISTRACIÓN DE PARQUEOS", 900, 600);
         this.currentUser = user;
         this.controller = controller;
-
         getContentPane().setLayout(new BorderLayout());
-        getContentPane().setBackground(COLOR_FONDO); // Heredado de BaseFrame
+        getContentPane().setBackground(COLOR_FONDO);
         this.setupCustomTitleBar("GESTIÓN DE SEDES OPERATIVAS");
-
         setupComponents();
         setupListeners();
         refreshTableData();
-
         setVisible(true);
     }
 
@@ -38,15 +34,11 @@ public class ParkingManagementFrame extends BaseFrame {
         JPanel mainContent = new JPanel(new BorderLayout(15, 15));
         mainContent.setOpaque(false);
         mainContent.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        // Encabezado estilizado
         JLabel lblTitle = new JLabel("LISTADO DE INFRAESTRUCTURAS");
         lblTitle.setForeground(COLOR_CELESTE);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblTitle.setBorder(BorderFactory.createEmptyBorder(0, 5, 10, 0));
         mainContent.add(lblTitle, BorderLayout.NORTH);
-
-        // Configuración de Tabla (Estilo Monitor)
         String[] columns = {"ID", "Sede", "Capacidad Total", "Cupos Preferenciales"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -54,39 +46,30 @@ public class ParkingManagementFrame extends BaseFrame {
                 return false;
             }
         };
-
         tblParkings = new JTable(tableModel);
         applyDarkTableStyle(tblParkings);
-
         JScrollPane scrollPane = new JScrollPane(tblParkings);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60)));
         scrollPane.getViewport().setBackground(COLOR_FONDO);
         mainContent.add(scrollPane, BorderLayout.CENTER);
-
-        // Panel de Acciones
         JPanel panelActions = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         panelActions.setOpaque(false);
-
         btnAdd = new JButton("Crear Sede");
         btnUpdate = new JButton("Modificar");
         btnDelete = new JButton("Eliminar");
         btnVisualize = new JButton("Visualizar Estructura");
         btnBack = new JButton("Volver");
-
-        // Aplicar estilos a botones
         styleButton(btnAdd, false);
         styleButton(btnUpdate, false);
         styleButton(btnDelete, false);
-        styleButton(btnVisualize, true); 
+        styleButton(btnVisualize, true);
         styleButton(btnBack, false);
-
         panelActions.add(btnAdd);
         panelActions.add(btnUpdate);
         panelActions.add(btnDelete);
         panelActions.add(Box.createHorizontalStrut(20));
         panelActions.add(btnVisualize);
         panelActions.add(btnBack);
-
         mainContent.add(panelActions, BorderLayout.SOUTH);
         getContentPane().add(mainContent, BorderLayout.CENTER);
     }
@@ -102,11 +85,9 @@ public class ParkingManagementFrame extends BaseFrame {
         btnVisualize.addActionListener(e -> handleVisualize());
 
         btnBack.addActionListener(e -> {
-            // Si hay una fila seleccionada, la deseleccionamos
             if (tblParkings.getSelectedRow() != -1) {
                 tblParkings.clearSelection();
             } else {
-                // Si no hay selección, volvemos al Dashboard
                 this.dispose();
                 new Dashboard(currentUser, controller.getFileManager()).setVisible(true);
             }
@@ -135,8 +116,6 @@ public class ParkingManagementFrame extends BaseFrame {
                 String name = tableModel.getValueAt(selectedRow, 1).toString();
                 int currentTotal = Integer.parseInt(tableModel.getValueAt(selectedRow, 2).toString());
                 int currentPref = Integer.parseInt(tableModel.getValueAt(selectedRow, 3).toString());
-
-                // Validación de ocupación antes de abrir edición
                 int occupiedSpaces = controller.getOccupancyCount(name);
                 if (occupiedSpaces > 0) {
                     JOptionPane.showMessageDialog(this,
@@ -204,15 +183,11 @@ public class ParkingManagementFrame extends BaseFrame {
         t.setSelectionBackground(COLOR_CELESTE);
         t.setSelectionForeground(COLOR_FONDO);
         t.setShowVerticalLines(false);
-
-        // Header
         t.getTableHeader().setBackground(new Color(30, 30, 30));
         t.getTableHeader().setForeground(COLOR_CELESTE);
         t.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         t.getTableHeader().setPreferredSize(new Dimension(0, 40));
         t.getTableHeader().setBorder(BorderFactory.createLineBorder(new Color(60, 60, 60)));
-
-        // Centrar columnas numéricas
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         t.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);

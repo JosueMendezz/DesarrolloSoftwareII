@@ -11,16 +11,14 @@ public class ParkingCreateFrame extends BaseFrame {
     private final JTextField txtName = new JTextField(20);
     private final JSpinner spinTotalSpaces = new JSpinner(new SpinnerNumberModel(1, 1, 500, 1));
     private final JSpinner spinPreferential = new JSpinner(new SpinnerNumberModel(0, 0, 500, 1));
-
     private final JButton btnBack = new JButton("Atrás");
     private final JButton btnNext = new JButton("Siguiente");
-
     private final User currentUser;
     private final ParkingLot parkingToEdit;
     private final ParkingController controller;
 
     public ParkingCreateFrame(User user, ParkingController controller) {
-        super("Heap Haven - Crear nuevo parqueo", 450, 420);
+        super("HEAP HAVEN - CREAR NUEVO PARQUEO", 450, 420);
         this.currentUser = user;
         this.controller = controller;
         this.parkingToEdit = null;
@@ -28,7 +26,7 @@ public class ParkingCreateFrame extends BaseFrame {
     }
 
     public ParkingCreateFrame(User user, ParkingController controller, ParkingLot existingParking) {
-        super("Heap Haven - Editar sede", 450, 420);
+        super("HEAP HAVEN - EDITAR SEDE", 450, 420);
         this.currentUser = user;
         this.controller = controller;
         this.parkingToEdit = existingParking;
@@ -49,31 +47,23 @@ public class ParkingCreateFrame extends BaseFrame {
         JPanel mainContent = new JPanel(new BorderLayout(15, 15));
         mainContent.setOpaque(false);
         mainContent.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
-
         JPanel panelForm = new JPanel(new GridLayout(3, 1, 15, 15));
         panelForm.setOpaque(false);
-
         panelForm.add(createFieldGroup("NOMBRE DE LA SEDE", txtName));
         panelForm.add(createFieldGroup("CAPACIDAD TOTAL", spinTotalSpaces));
         panelForm.add(createFieldGroup("CUPOS PREFERENCIALES", spinPreferential));
-
         mainContent.add(panelForm, BorderLayout.CENTER);
-
         JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         panelButtons.setOpaque(false);
-
         styleButton(btnBack, false);
         styleButton(btnNext, true);
-
         panelButtons.add(btnBack);
         panelButtons.add(btnNext);
-
         mainContent.add(panelButtons, BorderLayout.SOUTH);
         getContentPane().add(mainContent, BorderLayout.CENTER);
         setupListeners();
     }
-
-    // --- MÉTODOS DE APOYO VISUAL ---
+    
     private JPanel createFieldGroup(String labelText, JComponent component) {
         JPanel group = new JPanel(new BorderLayout(5, 5));
         group.setOpaque(false);
@@ -140,13 +130,10 @@ public class ParkingCreateFrame extends BaseFrame {
     }
 
     private void setupListeners() {
-        // BOTÓN ATRÁS: Regresa a la lista de sedes
         btnBack.addActionListener(e -> {
             new ParkingManagementFrame(currentUser, controller).setVisible(true);
             this.dispose();
         });
-
-        // BOTÓN SIGUIENTE
         btnNext.addActionListener(e -> {
             try {
                 String name = txtName.getText().trim();
