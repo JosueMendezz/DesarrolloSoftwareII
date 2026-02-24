@@ -278,9 +278,8 @@ public class ParkingController {
         }
     }
 
-    public List<String[]> getFilteredParkingSummary(User user) throws Exception { // Propagamos
+    public List<String[]> getFilteredParkingSummary(User user) throws Exception { 
         List<String[]> summary = new ArrayList<>();
-        // Si readAllParkingLines lanza IOException, sube a la vista automáticamente
         List<String> lines = fileManager.readAllParkingLines();
 
         for (String line : lines) {
@@ -324,7 +323,7 @@ public class ParkingController {
             String status = data[2].equalsIgnoreCase("true") ? "PREFERENCIAL" : "REGULAR";
             details.add(new String[]{
                 "Espacio #" + data[0],
-                data[1].toUpperCase(), // Tipo de vehículo
+                data[1].toUpperCase(), 
                 status
             });
         }

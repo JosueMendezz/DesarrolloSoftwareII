@@ -14,34 +14,27 @@ public class LoginController {
     public LoginController(LoginFrame view, FileManager dataManager) {
         this.view = view;
         this.dataManager = dataManager;
-        // No instanciamos la vista, la recibimos por parámetro
         initListeners();
     }
 
     private void initListeners() {
-        // El controlador solo coordina, no maneja el error aquí
         view.getBtnLogin().addActionListener(e -> {
             try {
                 handleLogin();
             } catch (Exception ex) {
-                // La vista es la encargada de mostrar el error al usuario
                 view.showErrorMessage(ex.getMessage());
             }
         });
     }
 
-    // El método ahora lanza la excepción hacia el listener de la vista
     private void handleLogin() throws Exception {
         String userStr = view.getUsername();
         String passStr = view.getPassword();
 
-        // Lógica de autenticación
         User user = authenticate(userStr, passStr);
 
-        // Notificamos éxito y delegamos la navegación
         view.showSuccessMessage("Bienvenido " + user.getRole() + ": " + user.getUsername());
         
-        // Delegamos la apertura del Dashboard (la vista se encarga de sí misma)
         new Dashboard(user, dataManager).setVisible(true);
         view.dispose();
     }

@@ -59,8 +59,6 @@ public class Dashboard extends BaseFrame {
         // --- ESTILO DE PESTAÑAS ---
         tabbedPane.setOpaque(false);
         tabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 13));
-
-        // Eliminamos el UI básico para que no dibuje bordes grises
         tabbedPane.setUI(new javax.swing.plaf.basic.BasicTabbedPaneUI() {
             @Override
             protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
@@ -282,10 +280,8 @@ public class Dashboard extends BaseFrame {
     }
 
     public void refreshMonitorData() {
-        // Buscamos la pestaña del monitor dentro del tabbedPane
         for (Component comp : tabbedPane.getComponents()) {
             if (comp instanceof ParkingMonitorView) {
-                // Ejecutamos el método que ya tienes creado
                 ((ParkingMonitorView) comp).refreshTableData();
                 break;
             }

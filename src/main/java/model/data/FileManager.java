@@ -33,7 +33,6 @@ public class FileManager {
                 Path path = Paths.get(fileName);
                 if (!Files.exists(path)) {
                     Files.createFile(path);
-                    // Inicializar tarifas por defecto si el archivo es nuevo
                     if (fileName.equals(RATES_FILE)) {
                         initDefaultRates();
                     }
@@ -61,7 +60,6 @@ public class FileManager {
             return lines;
         }
 
-        // Usar un BufferedReader con un FileReader garantiza que leamos el estado físico actual
         try (BufferedReader br = new BufferedReader(new FileReader(path.toFile()))) {
             String line;
             while ((line = br.readLine()) != null) {

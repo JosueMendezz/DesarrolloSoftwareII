@@ -242,7 +242,7 @@ public class VehicleController {
             return 2000.0;
         }
 
-        return 1000.0; // Default absoluto
+        return 1000.0; // Default 
     }
 
     public void finalizeTransaction(String plate, double amount, String operator, String parkingName) throws Exception {
@@ -252,9 +252,6 @@ public class VehicleController {
                 .filter(veh -> veh[0].equalsIgnoreCase(plate))
                 .findFirst()
                 .orElseThrow(() -> new Exception("Error crítico: Vehículo no encontrado al finalizar transacción."));
-
-        // v[0]=placa, v[1]=tipo, v[2]=marca, v[3]=modelo, v[4]=color, v[5]=detalles, 
-        // v[6]=preferencial, v[7]=extras, v[8]=ownerId, v[9]=sede, v[10]=espacio, v[11]=entrada
         // 2. Preparar los datos extendidos
         String exitTime = LocalDateTime.now().format(formatter);
         String entryTime = v[11];
@@ -263,9 +260,9 @@ public class VehicleController {
         String brandModel = v[2] + " " + v[3];
         String space = v[10];
         String isPreferential = v[6].equalsIgnoreCase("true") ? "PREFERENCIAL" : "REGULAR";
-        double appliedRate = getRateFromFile(type); // La tarifa que se le aplicó
+        double appliedRate = getRateFromFile(type); 
 
-        // 3. Crear la línea de historial "Mega Completa"
+        // 3. Crear la línea de historial 
         StringBuilder sb = new StringBuilder();
         sb.append(exitTime).append("|") // Hora de salida
                 .append(plate).append("|") // Placa
